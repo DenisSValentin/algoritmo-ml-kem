@@ -1,6 +1,6 @@
 # Trabajo Fin de Grado de Denis Valentin Stoyanov D'Antonio
 
-# ⚛️ Implementación de ML-KEM (FIPS 203) - Criptografía Post-Cuántica
+## ⚛️ Implementación de ML-KEM (FIPS 203) - Criptografía Post-Cuántica
 
 Este repositorio contiene la implementación en **Python** del algoritmo **Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM)**. Este trabajo fue desarrollado como parte de mi Trabajo de Fin de Grado en Ingeniería Informática en la Universidad de Granada.
 
