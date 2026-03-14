@@ -134,7 +134,7 @@ The CLI provides options to:
 This implementation was developed as a **Final Degree Project (TFG)** at the [University of Granada](https://www.ugr.es), under the degree in Computer Engineering.
 
 **Author:** Denis Stoyanov Valentin D'Antonio  
-**Supervisor:** [To be added]  
+**Supervisor:** Jesús García Miranda  
 **Date:** July 2025
 
 ---
