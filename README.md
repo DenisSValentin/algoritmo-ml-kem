@@ -1,78 +1,158 @@
-# Trabajo Fin de Grado de Denis Valentin Stoyanov D'Antonio
+# ML-KEM: Module-Lattice-Based Key-Encapsulation Mechanism
 
-## ⚛️ Implementación de ML-KEM (FIPS 203) - Criptografía Post-Cuántica
+<p align="center">
+  <img src="https://img.shields.io/badge/Standard-FIPS%20203-003B36?style=for-the-badge" alt="FIPS 203">
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/NIST-Post--Quantum-FF6F00?style=for-the-badge" alt="NIST PQC">
+  <img src="https://img.shields.io/badge/License-MIT-yellowgreen?style=for-the-badge" alt="License">
+</p>
 
-Este repositorio contiene la implementación en **Python** del algoritmo **Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM)**. Este trabajo fue desarrollado como parte de mi Trabajo de Fin de Grado en Ingeniería Informática en la Universidad de Granada.
-
-El algoritmo implementado corresponde al estándar **FIPS 203**, publicado por el **NIST** (National Institute of Standards and Technology) en agosto de 2024, y está diseñado para ser seguro frente a ataques de ordenadores cuánticos.
-
----
-
-## 🤔 ¿Por qué este proyecto? El Desafío Post-Cuántico
-
-La computación cuántica, aunque prometedora, representa una amenaza existencial para la criptografía que usamos hoy en día. Algoritmos cuánticos como el de **Shor** y el de **Grover** serán capaces de romper sistemas de cifrado asimétrico (como RSA) y debilitar los simétricos (como AES).
-
-Para solucionar este problema, el NIST inició en 2017 un concurso para estandarizar nuevos algoritmos criptográficos, denominados **post-cuánticos**, que fueran resistentes a estas nuevas amenazas. Este proyecto se enfoca en la implementación de uno de los estándares ganadores.
+<p align="center">
+  <em>Secure key encapsulation based on module lattices — resistant to quantum attacks</em>
+</p>
 
 ---
 
-## 🔐 Sobre el Algoritmo ML-KEM
+## Overview
 
-**ML-KEM** es un Mecanismo de Encapsulamiento de Claves (KEM) cuya seguridad se basa en la dificultad de resolver problemas en **retículos** (en inglés, *lattices*), específicamente en el problema de **Module-LWE** (Aprendizaje Modular con Errores).
+This repository contains a complete Python implementation of **ML-KEM** (Module-Lattice-Based Key-Encapsulation Mechanism), the post-quantum cryptographic standard published by NIST as **FIPS 203** in August 2024.
 
-Este algoritmo es una evolución directa de **CRYSTALS-Kyber**, uno de los primeros algoritmos estandarizados por el NIST en 2022, e introduce mejoras y comprobaciones adicionales para robustecer su seguridad.
-
----
-
-## ✨ Características del Proyecto
-
-* **Implementación Completa en Python:** El algoritmo está desarrollado íntegramente en Python, utilizando una estructura de clase (`ML-KEM`) que encapsula toda la lógica.
-* **Soporte para los 3 Niveles de Seguridad:** Incluye los tres conjuntos de parámetros oficiales definidos en el estándar FIPS 203:
-    * `ML-KEM-512` (Categoría de Seguridad 1)
-    * `ML-KEM-768` (Categoría de Seguridad 3 - Usado por defecto)
-    * `ML-KEM-1024` (Categoría de Seguridad 5)
-* **Librerías Eficientes:** Utiliza **NumPy** para las complejas operaciones con vectores y matrices y **hashlib** para las funciones hash requeridas (SHA3, SHAKE).
-* **Interfaz Interactiva:** Se ha desarrollado una interfaz de usuario por consola para probar de forma sencilla e intuitiva todas las funcionalidades del algoritmo: generar claves, encapsular, desencapsular y comparar los resultados.
-
----
-## 🎓 Objetivos del Trabajo de Fin de Grado
-
-Este proyecto se realizó para cumplir con los siguientes objetivos académicos:
-
-* Analizar el estado actual de la criptografía.
-* Explicar los fundamentos de la computación cuántica y su amenaza.
-* Investigar el concurso de estandarización post-cuántica del NIST.
-* Introducir los problemas matemáticos basados en retículos.
-* Seleccionar y desarrollar teóricamente un algoritmo KEM basado en retículos (ML-KEM).
-* Implementar el algoritmo seleccionado (este repositorio).
-* Implementar una interfaz de usuario para el algoritmo.
-* Comprobar el correcto funcionamiento del algoritmo.
-* Extraer conclusiones sobre el desarrollo y el aprendizaje obtenido.
+ML-KEM is designed to secure communications against future quantum computers. Unlike classical algorithms such as RSA or ECDH, which can be broken by Shor's algorithm, ML-KEM's security is based on the hardness of the **Module Learning with Errors (MLWE)** problem — believed to be computationally infeasible even for quantum adversaries.
 
 ---
 
-## 🚀 Cómo Ejecutar el Algoritmo
+## Background
 
-### Prerrequisitos
-* Python 3.x
+### The Quantum Threat
 
-### Instalación
+Quantum computers pose an existential threat to current cryptographic infrastructure. Specifically:
 
-1.  Clona el repositorio:
-    ```bash
-    git clone [https://github.com/DenisSValentin/Algoritmo_ML-KEM.git](https://github.com/DenisSValentin/Algoritmo_ML-KEM.git)
-    cd Algoritmo_ML-KEM
-    ```
-2.  Instala las dependencias necesarias:
-    ```bash
-    pip install numpy
-    ```
-    *(La librería `hashlib` viene incluida con Python)*
+- **Shor's Algorithm**: Breaks RSA, DSA, and ECDH by efficiently factoring large integers and computing discrete logarithms.
+- **Grover's Algorithm**: Accelerates brute-force searches, effectively halving the security strength of symmetric ciphers like AES.
 
-### Uso
+### The Solution: Post-Quantum Cryptography
 
-Para ejecutar el algoritmo, puedes utilizar la interfaz interactiva. Desde la raíz del proyecto, ejecuta el archivo principal:
+In 2017, NIST initiated a global competition to standardize quantum-resistant algorithms. After 6 years of evaluation, ML-KEM (formerly CRYSTALS-Kyber) was selected as the primary standard for key encapsulation.
+
+ML-KEM offers:
+- ✅ Security against classical and quantum attacks
+- ✅ Efficient key sizes and fast operations
+- ✅ Standardized by NIST (FIPS 203)
+- ✅ Adopted by major browsers and protocols (Chrome, Firefox, OpenSSL)
+
+---
+
+## About ML-KEM
+
+### What is a KEM?
+
+A Key-Encapsulation Mechanism (KEM) enables two parties to establish a shared secret key over an insecure channel. Unlike traditional public-key encryption, KEMs are optimized for key exchange scenarios common in TLS handshakes.
+
+### Security Foundation
+
+ML-KEM's security relies on the **Module Learning with Errors (MLWE)** problem:
+
+> Given a matrix **A** (public) and a vector **b = As + e** (with small error **e**), recover the secret vector **s**.
+
+This problem is fundamentally different from number-theoretic problems (factoring, discrete logs) that quantum computers can solve efficiently.
+
+### Parameter Sets
+
+| Parameter Set | Security Level | Equivalency | Public Key | Ciphertext |
+|---------------|----------------|-------------|------------|------------|
+| ML-KEM-512    | Security Level 1 | AES-128    | 800 bytes  | 768 bytes  |
+| ML-KEM-768    | Security Level 3 | AES-192    | 1184 bytes | 1088 bytes |
+| ML-KEM-1024   | Security Level 5 | AES-256    | 1568 bytes | 1568 bytes |
+
+---
+
+## Implementation Details
+
+This implementation follows the **FIPS 203** specification and includes:
+
+- **Complete ML-KEM-512, ML-KEM-768, and ML-KEM-1024** parameter sets
+- **Pure Python implementation** using NumPy for vector/matrix operations
+- **SHA3 / SHAKE** hash functions via hashlib
+- **NTT (Number Theoretic Transform)** for efficient polynomial multiplication
+- **Interactive CLI** for testing all operations
+
+### Key Algorithms Implemented
+
+| Algorithm | Description |
+|-----------|-------------|
+| `ML_KEM_KeyGen()` | Generates key pair (public key, secret key) |
+| `ML_KEM_Encaps(ek)` | Encapsulates a shared secret using public key |
+| `ML_KEM_Decaps(dk, c)` | Decapsulates the shared secret using secret key |
+
+---
+
+## Project Structure
+
+```
+Algoritmo_ML-KEM/
+├── ml_kem.py           # Core ML-KEM implementation
+├── ml_kem_main.py      # Interactive CLI interface
+├── README.md           # This file
+└── LICENSE             # MIT License
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- NumPy
+
+### Installation
+
+```bash
+git clone git@github.com:DenisSValentin/Algoritmo_ML-KEM.git
+cd Algoritmo_ML-KEM
+pip install numpy
+```
+
+### Usage
+
+Run the interactive interface:
+
 ```bash
 python ml_kem_main.py
 ```
-Esto lanzará un menú en la consola desde donde podrás probar todas las funcionalidades del algoritmo ML-KEM.
+
+The CLI provides options to:
+1. Generate keypairs
+2. Encapsulate secrets
+3. Decapsulate ciphertexts
+4. Verify correctness
+
+---
+
+## Academic Context
+
+This implementation was developed as a **Final Degree Project (TFG)** at the [University of Granada](https://www.ugr.es), under the degree in Computer Engineering.
+
+**Author:** Denis Stoyanov Valentin D'Antonio  
+**Supervisor:** [To be added]  
+**Date:** July 2025
+
+---
+
+## References
+
+- [NIST FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard](https://csrc.nist.gov/pubs/fips/203/final)
+- [NIST Post-Quantum Cryptography Standardization](https://csrc.nist.gov/projects/post-quantum-cryptography)
+- [CRYSTALS-Kyber Specification](https://pq-crystals.org/kyber/)
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">
+  <sub>Built with 🔐 for a quantum-safe future</sub>
+</p>
