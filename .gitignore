@@ -7,3 +7,6 @@ build/
 dist/
 .DS_Store
 .claude/launch.json
+
+# Documentos de referencia locales (no se suben)
+references/
