@@ -10,7 +10,7 @@ const PARAMS = [
   { name: "ML-KEM-1024", k: 4, category: 5, aes: "AES-256", failure: "2⁻¹⁷⁵" },
 ];
 
-const state = { params: "ML-KEM-768", step: 0, tamper: false, data: null, bench: null, loading: false };
+const state = { params: "ML-KEM-768", step: 0, tamper: false, data: null, bench: null, loading: false, latticeView: "2d" };
 
 // ------------------------------------------------------------------ utilidades DOM
 
@@ -290,6 +290,19 @@ function toSup(n) {
   return String(n).split("").map((d) => sup[d]).join("");
 }
 
+// Punto objetivo ★
+function drawStar(ctx, x, y, outer = 10, inner = 4) {
+  ctx.fillStyle = PAL.accentCss;
+  ctx.beginPath();
+  for (let k = 0; k < 10; k++) {
+    const r = k % 2 ? inner : outer;
+    const a = -Math.PI / 2 + (k * Math.PI) / 5;
+    ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
 function latticeDemo(dimension) {
   const width = 560;
   const height = 340;
@@ -375,16 +388,7 @@ function latticeDemo(dimension) {
       if (closest !== secret) ring(closest, PAL.bad, 11);
     }
     if (guess) ring(guess, guess === secret ? PAL.ok : PAL.bad, 7);
-    // Punto objetivo (estrella)
-    ctx.fillStyle = PAL.accentCss;
-    ctx.beginPath();
-    for (let k = 0; k < 10; k++) {
-      const r = k % 2 ? 4 : 10;
-      const a = -Math.PI / 2 + (k * Math.PI) / 5;
-      ctx.lineTo(target[0] + r * Math.cos(a), target[1] + r * Math.sin(a));
-    }
-    ctx.closePath();
-    ctx.fill();
+    drawStar(ctx, target[0], target[1]);
 
     const parts = [];
     if (guess) parts.push(guess === secret ? "¡Correcto! Ese es el punto original." : "No es ese punto.");
@@ -415,6 +419,253 @@ function latticeDemo(dimension) {
       h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución")),
     status,
   );
+}
+
+// El mismo juego en 3D. La pantalla es plana, así que se dibuja una proyección en
+// perspectiva que se puede girar. El ángulo inicial se elige a propósito para que
+// otro punto parezca más cercano a ★ que el correcto.
+function lattice3dDemo(dimension) {
+  const width = 560;
+  const height = 340;
+  const { canvas, ctx } = canvasFor(width, height);
+  const basis = [[44, 6, 10], [10, 40, -8], [-6, 12, 42]];
+  const radius = 120;
+  const focal = 600;
+  const zoom = 1.1;
+  const combo = (i, j, k) => [0, 1, 2].map((a) => i * basis[0][a] + j * basis[1][a] + k * basis[2][a]);
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+  const points = [];
+  for (let i = -5; i <= 5; i++) for (let j = -5; j <= 5; j++) for (let k = -5; k <= 5; k++) {
+    const p = combo(i, j, k);
+    if (Math.hypot(...p) <= radius) points.push(p);
+  }
+  let shortest = Infinity;
+  for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) for (let k = -2; k <= 2; k++) {
+    if (i || j || k) shortest = Math.min(shortest, Math.hypot(...combo(i, j, k)));
+  }
+  const nearest = (t) => points.reduce((best, p) => (dist(p, t) < dist(best, t) ? p : best));
+  // Celda fundamental: el paralelepípedo que forman b₁, b₂ y b₃
+  const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => combo(n & 1, (n >> 1) & 1, (n >> 2) & 1));
+  const edges = [];
+  for (let a = 0; a < 8; a++) for (const bit of [1, 2, 4]) if (!(a & bit)) edges.push([a, a | bit]);
+
+  let yaw = 0;
+  let pitch = 0;
+  let secret;
+  let target;
+  let closest;
+  let direction;
+  let guess = null;
+  let reveal = false;
+  let dragged = false;
+  const slider = h("input", { type: "range", min: 5, max: 95, value: 30, "aria-label": "tamaño del ruido" });
+  const status = h("p", { class: "note" });
+
+  // Gira (y alrededor del eje vertical, x alrededor del horizontal) y proyecta en perspectiva
+  function project(p, y = yaw, x = pitch) {
+    const x1 = p[0] * Math.cos(y) + p[2] * Math.sin(y);
+    const z1 = -p[0] * Math.sin(y) + p[2] * Math.cos(y);
+    const y2 = p[1] * Math.cos(x) - z1 * Math.sin(x);
+    const z2 = p[1] * Math.sin(x) + z1 * Math.cos(x);
+    const s = (zoom * focal) / (focal - z2);
+    return { x: width / 2 + x1 * s, y: height / 2 - y2 * s, z: z2, s };
+  }
+  const screenDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const apparentNearest = () => {
+    const t = project(target);
+    return points.reduce((best, p) => (screenDist(project(p), t) < screenDist(project(best), t) ? p : best));
+  };
+
+  // Busca el ángulo en el que el punto correcto parece más lejos de ★, en pantalla,
+  // comparado con el impostor más cercano
+  function trickyAngle() {
+    let best = { score: -1, y: 0, x: 0 };
+    for (let n = 0; n < 400; n++) {
+      const y = Math.random() * 2 * Math.PI;
+      const x = (Math.random() - 0.5) * 1.6;
+      const t = project(target, y, x);
+      let decoy = Infinity;
+      for (const p of points) if (p !== closest) decoy = Math.min(decoy, screenDist(project(p, y, x), t));
+      const score = screenDist(project(closest, y, x), t) / decoy;
+      if (score > best.score) best = { score, y, x };
+    }
+    yaw = best.y;
+    pitch = best.x;
+  }
+
+  const placeTarget = () => {
+    const noise = (Number(slider.value) / 100) * shortest;
+    target = secret.map((v, a) => v + noise * direction[a]);
+    closest = nearest(target);
+  };
+  const newPuzzle = () => {
+    const central = points.filter((p) => Math.hypot(...p) < 55);
+    secret = central[Math.floor(Math.random() * central.length)];
+    const z = 2 * Math.random() - 1;
+    const phi = Math.random() * 2 * Math.PI;
+    direction = [Math.sqrt(1 - z * z) * Math.cos(phi), Math.sqrt(1 - z * z) * Math.sin(phi), z];
+    guess = null;
+    reveal = false;
+    placeTarget();
+    trickyAngle();
+    draw();
+  };
+
+  function ring(q, color, r = 11, dashed = false) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash(dashed ? [3, 3] : []);
+    ctx.beginPath();
+    ctx.arc(q.x, q.y, r, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    const cornersOnScreen = corners.map((c) => project(c));
+    ctx.strokeStyle = PAL.border;
+    ctx.lineWidth = 1;
+    for (const [a, b] of edges) {
+      ctx.beginPath();
+      ctx.moveTo(cornersOnScreen[a].x, cornersOnScreen[a].y);
+      ctx.lineTo(cornersOnScreen[b].x, cornersOnScreen[b].y);
+      ctx.stroke();
+    }
+    const o = project([0, 0, 0]);
+    ctx.font = "12px system-ui";
+    basis.forEach((b, n) => {
+      const q = project(b);
+      ctx.strokeStyle = ctx.fillStyle = PAL.muted;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(o.x, o.y);
+      ctx.lineTo(q.x, q.y);
+      ctx.stroke();
+      ctx.fillText(["b₁", "b₂", "b₃"][n], q.x + 4, q.y - 4);
+    });
+
+    // De atrás hacia delante; lo lejano, más pequeño y más tenue
+    const items = points.map((p) => ({ p, q: project(p) }));
+    items.push({ star: true, q: project(target) });
+    items.sort((a, b) => a.q.z - b.q.z);
+    for (const { star, q } of items) {
+      ctx.globalAlpha = Math.min(1, Math.max(0.2, 0.25 + (0.75 * (q.z + radius)) / (2 * radius)));
+      if (star) {
+        ctx.globalAlpha = 1;
+        drawStar(ctx, q.x, q.y, 10 * q.s, 4 * q.s);
+        continue;
+      }
+      ctx.fillStyle = PAL.muted;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, 3.2 * q.s, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const apparent = apparentNearest();
+    if (reveal) {
+      const s = project(secret);
+      const t = project(target);
+      ctx.strokeStyle = PAL.ok;
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(t.x, t.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ring(s, PAL.ok);
+      if (closest !== secret) ring(project(closest), PAL.bad);
+      if (apparent !== closest) ring(project(apparent), PAL.text, 11, true);
+    }
+    if (guess) ring(project(guess), guess === closest ? PAL.ok : PAL.bad, 7);
+    if (!dragged) {
+      ctx.fillStyle = PAL.muted;
+      ctx.fillText("Arrastra para girar", 10, height - 12);
+    }
+
+    const parts = [];
+    if (guess) parts.push(guess === closest ? "¡Correcto! Ese es el punto más cercano." : "No es ese punto.");
+    if (reveal) {
+      parts.push(closest === secret
+        ? "Verde: punto original. La línea discontinua es el ruido e."
+        : "Con tanto ruido, el punto más cercano a ★ (rojo) ya no es el original (verde): aquí el descifrado fallaría.");
+      parts.push(apparent !== closest
+        ? "El círculo discontinuo es el punto que, desde este ángulo, parece más cercano en pantalla. Gira y verás cómo cambia."
+        : "Desde este ángulo, lo que se ve en pantalla coincide con la realidad.");
+    }
+    if (!guess && !reveal) parts.push("Haz clic en el punto que creas más cercano a ★. Puedes girar el dibujo arrastrándolo o con las flechas.");
+    parts.push(`En ${state.params} esto mismo ocurre en ${fmt(dimension)} dimensiones, y no hay ángulo desde el que mirar.`);
+    status.textContent = parts.join(" ");
+  }
+
+  canvas.tabIndex = 0;
+  canvas.setAttribute("aria-label", "Retículo en 3 dimensiones. Usa las flechas para girarlo.");
+  canvas.classList.add("rotatable");
+  let drag = null;
+  canvas.addEventListener("pointerdown", (event) => {
+    canvas.setPointerCapture(event.pointerId);
+    drag = { x: event.clientX, y: event.clientY, moved: false };
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = dragged = true;
+    yaw += dx * 0.01;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch + dy * 0.01));
+    drag.x = event.clientX;
+    drag.y = event.clientY;
+    draw();
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (drag && !drag.moved) {
+      const [x, y] = pointerPosition(event, canvas, width);
+      guess = points.reduce((best, p) => (screenDist(project(p), { x, y }) < screenDist(project(best), { x, y }) ? p : best));
+      draw();
+    }
+    drag = null;
+  });
+  canvas.addEventListener("keydown", (event) => {
+    const turn = { ArrowLeft: [-0.12, 0], ArrowRight: [0.12, 0], ArrowUp: [0, -0.12], ArrowDown: [0, 0.12] }[event.key];
+    if (!turn) return;
+    event.preventDefault();
+    event.stopPropagation(); // que las flechas giren el retículo y no cambien de paso
+    dragged = true;
+    yaw += turn[0];
+    pitch = Math.max(-1.4, Math.min(1.4, pitch + turn[1]));
+    draw();
+  });
+  slider.addEventListener("input", () => { placeTarget(); draw(); });
+  newPuzzle();
+
+  return h("div", {},
+    canvas,
+    h("div", { class: "controls-line" },
+      "Tamaño del ruido:", slider,
+      h("button", { onclick: newPuzzle }, "Nuevo punto"),
+      h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución")),
+    status,
+  );
+}
+
+function latticeSection(dimension) {
+  const views = [["2d", "2D"], ["3d", "3D"]];
+  const select = (view) => {
+    if (view === state.latticeView) return;
+    state.latticeView = view;
+    render();
+    document.querySelector('.visual-head [aria-checked="true"]')?.focus();
+  };
+  const picker = h("div", { class: "segmented", role: "radiogroup", "aria-label": "Dimensiones del retículo de juguete" },
+    views.map(([view, label]) => h("button", { role: "radio", "aria-checked": String(view === state.latticeView), onclick: () => select(view) }, label)));
+  const is3d = state.latticeView === "3d";
+  return h("section", {},
+    h("div", { class: "visual-head" }, h("h4", {}, `Retículo de juguete en ${is3d ? 3 : 2} dimensiones`), picker),
+    is3d ? lattice3dDemo(dimension) : latticeDemo(dimension));
 }
 
 // Coeficientes de v' (con máscara) y de w (sin máscara) en el reloj de Z_q
@@ -559,17 +810,32 @@ const STEPS = [
     title: "Retículos",
     flow: {},
     render(d) {
+      const dim = d.params.lattice_dimension;
+      const dimensions = state.latticeView === "3d"
+        ? `
+          <p>En 3 dimensiones ya no basta con mirar: la pantalla es plana y la profundidad se pierde. Desde el ángulo inicial, ★ parece pegada a un punto que no es el bueno. Gira el dibujo para comprobarlo.</p>
+          <p>${d.params.name} trabaja en <b>${fmt(dim)} dimensiones</b>. Ahí no hay ángulo desde el que mirar: cualquier dibujo en pantalla descarta ${fmt(dim - 2)} de ellas. Y con cada dimensión hay muchos más vecinos entre los que dudar:</p>
+          <table class="compare plain">
+            <tr><th>Dimensiones</th><th>Vecinos a la distancia mínima</th></tr>
+            <tr><td>2</td><td>6</td></tr>
+            <tr><td>3</td><td>12</td></tr>
+            <tr><td>8</td><td>240</td></tr>
+            <tr><td>24</td><td>196&nbsp;560</td></tr>
+          </table>
+          <p class="note">Son los retículos más compactos de cada dimensión. En ${fmt(dim)} dimensiones no se conoce el número exacto, pero crece exponencialmente, y no se conoce ningún algoritmo eficiente para resolver CVP.</p>`
+        : `
+          <p>En 2 dimensiones se ve a simple vista. ${d.params.name} trabaja en un retículo de <b>${fmt(dim)} dimensiones</b>, y ahí no se conoce ningún algoritmo eficiente. Pasa a 3D para ver por qué mirar deja de funcionar.</p>`;
       return {
         explain: `
           <h2>2. ¿Qué es un retículo?</h2>
-          <p>Un <b>retículo</b> es el conjunto de puntos que se obtienen sumando y restando un número entero de veces unos vectores base. A la derecha, b₁ y b₂ generan todos los puntos grises.</p>
+          <p>Un <b>retículo</b> es el conjunto de puntos que se obtienen sumando y restando un número entero de veces unos vectores base. A la derecha, ${state.latticeView === "3d" ? "b₁, b₂ y b₃ generan todos los puntos grises; la caja es la celda que se repite" : "b₁ y b₂ generan todos los puntos grises"}.</p>
           <p>El problema difícil: te doy un punto ★ que está <i>cerca</i> de un punto del retículo, pero no encima. ¿Cuál es el punto del retículo más cercano? Es el <b>problema del vector más cercano (CVP)</b>.</p>
-          <p>En 2 dimensiones se ve a simple vista. ${d.params.name} trabaja en un retículo de <b>${fmt(d.params.lattice_dimension)} dimensiones</b>, y ahí no se conoce ningún algoritmo eficiente.</p>
+          ${dimensions}
           <p>La relación con ML-KEM: la clave pública es</p>
           <div class="formula">t = A·s + e</div>
           <p>Sin el error <code>e</code>, se despejaría <code>s</code> por Gauss en microsegundos. Con <code>e</code>, <code>t</code> es "un punto cerca del retículo" y recuperar <code>s</code> equivale a resolver CVP. Eso es <b>LWE</b> (Learning With Errors).</p>
           <p class="note">Sube el ruido: si es demasiado grande, el punto más cercano deja de ser el original. Por eso en ML-KEM el ruido es pequeño: suficiente para esconder el secreto, insuficiente para estropear el descifrado.</p>`,
-        visual: h("section", {}, h("h4", {}, "Retículo de juguete en 2 dimensiones"), latticeDemo(d.params.lattice_dimension)),
+        visual: latticeSection(dim),
       };
     },
   },

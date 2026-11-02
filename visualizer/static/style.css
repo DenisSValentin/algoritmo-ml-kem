@@ -242,6 +242,13 @@ main { max-width: 1280px; margin: 0 auto; padding: 0 24px 90px; }
 .verdict.bad { color: var(--bad); }
 
 canvas.chart { display: block; max-width: 100%; }
+canvas.rotatable { cursor: grab; touch-action: none; border-radius: 6px; }
+canvas.rotatable:active { cursor: grabbing; }
+canvas.rotatable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.visual-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.visual .visual-head h4 { margin: 0; }
+.visual-head .segmented button { padding: 4px 12px; font-size: 13px; }
 
 .controls-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0; font-size: 13px; }
 .controls-line input[type="range"] { width: 160px; accent-color: var(--accent); }
