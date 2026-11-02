@@ -1,8 +1,14 @@
-# Revisión del TFG (versión de septiembre de 2024)
+# Fe de erratas y revisión del TFG
 
-Revisión del código original (ahora en [`legacy/`](../legacy/)) contrastado con
-[FIPS 203 final](https://csrc.nist.gov/pubs/fips/203/final) (agosto de 2024) y con su
-borrador (`ipd`, agosto de 2023), y con los vectores de prueba oficiales de NIST (ACVP).
+La memoria (`Memoria_TFG_Denis_Stoyanov.pdf`) y el código de [`legacy/`](../legacy/) se
+conservan tal y como se entregaron y defendieron en septiembre de 2024. Este documento
+recoge lo que una revisión posterior encontró en ese código, contrastándolo con
+[FIPS 203 final](https://csrc.nist.gov/pubs/fips/203/final) (agosto de 2024), con su
+borrador (`ipd`, agosto de 2023) y con los vectores de prueba oficiales de NIST (ACVP), y
+cómo se ha corregido en la versión actual ([`mlkem/`](../mlkem/)).
+
+Las figuras de código de los capítulos 7 y 8 de la memoria corresponden a la versión de
+2024. Donde la memoria y este documento no coincidan, vale lo que dice este documento.
 
 ## Resumen
 
@@ -107,7 +113,6 @@ Los números de línea se refieren a [`legacy/ml_kem.py`](../legacy/ml_kem.py).
   compara en tiempo constante (aunque en Python el resto del código no lo es; ver abajo).
 - Interfaz: `int(input())` se cae si se escribe una letra; al cambiar de parámetros no se
   borraban `K`, `K′` ni `c`; y la variable `bloqueo` era difícil de seguir.
-- El README decía licencia MIT, pero el fichero `LICENSE` es GPL-3.0; y fecha "July 2025".
 
 ## NumPy (y Pandas): ¿se usaron mal?
 
@@ -152,9 +157,9 @@ Se puede repetir con `python -m benchmarks.bench`.
 
 ## ¿Python o Go?
 
-La pregunta del tribunal tiene buena respuesta, y no es "Go era mejor":
+En la defensa se preguntó por qué Python y no Go. La respuesta, en resumen:
 
-> Elegí Python porque el objetivo del TFG era **entender y verificar** el estándar, no
+> Se eligió Python porque el objetivo del TFG era **entender y verificar** el estándar, no
 > producir una librería para usar en producción. En Python el código se lee casi igual que el
 > pseudocódigo de FIPS 203, lo que permite comprobar algoritmo por algoritmo que se ha
 > implementado lo que dice el documento. Para producción nadie debería usar una
@@ -183,7 +188,7 @@ Dicho eso, conviene conocer qué habría aportado cada opción:
   enteros grandes, las ramas y la memoria los gestiona el intérprete) ni borrar los secretos
   de memoria. Para una implementación didáctica no importa; para producción, sí.
 
-Si quisieras ampliar el proyecto, una segunda implementación en Go que pase los mismos
+Como posible ampliación, una segunda implementación en Go que pase los mismos
 vectores de NIST sería un buen complemento: mostraría las dos caras (didáctica y de producción).
 
 ## Infraestructura que faltaba (y que ahora tiene)
@@ -204,11 +209,3 @@ vectores de NIST sería un buen complemento: mostraría las dos caras (didáctic
 - No es de tiempo constante ni borra los secretos de memoria. Es una implementación
   **educativa**; no debe usarse para proteger datos reales.
 - No hace la comprobación de consistencia del par de claves (sección 7.1), que es opcional.
-
-## Algo que deberías revisar
-
-La memoria del TFG (`Memoria_TFG_Denis_Stoyanov.pdf`, página 11, la autorización para la
-biblioteca) incluye tu **DNI**, y el PDF está en un repositorio público de GitHub. Si
-prefieres que no esté ahí, habría que sustituir el PDF por una versión sin esa página y,
-para que desaparezca también del historial, reescribir el historial de git y forzar el push.
-No he tocado nada de esto.

@@ -7,7 +7,7 @@ name = "algoritmo-ml-kem"
 version = "2.0.0"
 description = "Implementación educativa en Python de ML-KEM (FIPS 203) con visualizador interactivo"
 readme = "README.md"
-license = { text = "GPL-3.0-or-later" }
+license = { text = "MIT" }
 authors = [{ name = "Denis Valentin Stoyanov D'Antonio" }]
 requires-python = ">=3.9"
 dependencies = ["numpy>=1.22"]
