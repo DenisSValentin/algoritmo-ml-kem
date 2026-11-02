@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "algoritmo-ml-kem"
+version = "2.0.0"
+description = "Implementación educativa en Python de ML-KEM (FIPS 203) con visualizador interactivo"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Denis Valentin Stoyanov D'Antonio" }]
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.22"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[project.scripts]
+ml-kem-visualizer = "visualizer.server:main"
+
+[tool.setuptools]
+packages = ["mlkem", "visualizer"]
+
+[tool.setuptools.package-data]
+visualizer = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+extend-exclude = ["legacy"]

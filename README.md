@@ -2,9 +2,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Standard-FIPS%20203-003B36?style=for-the-badge" alt="FIPS 203">
-  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/NIST-Post--Quantum-FF6F00?style=for-the-badge" alt="NIST PQC">
-  <img src="https://img.shields.io/badge/License-MIT-yellowgreen?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/NIST%20ACVP-passing-2E7D32?style=for-the-badge" alt="NIST ACVP vectors">
+  <img src="https://img.shields.io/badge/License-GPL--3.0-yellowgreen?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
@@ -68,21 +69,23 @@ This problem is fundamentally different from number-theoretic problems (factorin
 
 ## Implementation Details
 
-This implementation follows the **FIPS 203** specification and includes:
+This implementation follows the final **FIPS 203** specification and includes:
 
-- **Complete ML-KEM-512, ML-KEM-768, and ML-KEM-1024** parameter sets
-- **Pure Python implementation** using NumPy for vector/matrix operations
-- **SHA3 / SHAKE** hash functions via hashlib
-- **NTT (Number Theoretic Transform)** for efficient polynomial multiplication
-- **Interactive CLI** for testing all operations
+- **ML-KEM-512, ML-KEM-768 and ML-KEM-1024** as immutable parameter sets
+- **Verified against the official NIST ACVP test vectors** (key generation, encapsulation, decapsulation, implicit rejection and input checks)
+- **Vectorised NumPy** for polynomial arithmetic and the NTT (~0.2–0.5 ms per operation)
+- **SHA3 / SHAKE** from `hashlib`, randomness from `secrets` (the OS CSPRNG)
+- **Interactive visualizer** that runs the real implementation and shows every intermediate value
 
-### Key Algorithms Implemented
+| Parameter set | KeyGen | Encaps | Decaps |
+|---|---|---|---|
+| ML-KEM-512 | 0.15 ms | 0.21 ms | 0.28 ms |
+| ML-KEM-768 | 0.21 ms | 0.29 ms | 0.36 ms |
+| ML-KEM-1024 | 0.29 ms | 0.37 ms | 0.45 ms |
 
-| Algorithm | Description |
-|-----------|-------------|
-| `ML_KEM_KeyGen()` | Generates key pair (public key, secret key) |
-| `ML_KEM_Encaps(ek)` | Encapsulates a shared secret using public key |
-| `ML_KEM_Decaps(dk, c)` | Decapsulates the shared secret using secret key |
+<sub>Median on an Apple M5 Pro (`python -m benchmarks.bench`).</sub>
+
+> **Educational code.** Python cannot guarantee constant-time execution or wipe secrets from memory. Use an audited library (Go `crypto/mlkem`, BoringSSL, OpenSSL 3.5+, liboqs) to protect real data.
 
 ---
 
@@ -90,10 +93,22 @@ This implementation follows the **FIPS 203** specification and includes:
 
 ```
 algoritmo-ml-kem/
-├── ml_kem.py           # Core ML-KEM implementation
-├── ml_kem_main.py      # Interactive CLI interface
-├── README.md           # This file
-└── LICENSE             # MIT License
+├── mlkem/              # The ML-KEM implementation (one module per FIPS 203 section)
+│   ├── params.py       #   Parameter sets
+│   ├── ring.py         #   Z_q, R_q and the NTT
+│   ├── encoding.py     #   ByteEncode/Decode, Compress/Decompress
+│   ├── sampling.py     #   SampleNTT, SamplePolyCBD
+│   ├── hashes.py       #   G, H, J, PRF, XOF
+│   ├── kpke.py         #   K-PKE (KeyGen, Encrypt, Decrypt)
+│   └── kem.py          #   ML-KEM (KeyGen, Encaps, Decaps + input checks)
+├── visualizer/         # Step-by-step web visualizer (standard library server)
+├── tests/              # Unit tests + NIST ACVP vectors
+├── benchmarks/         # Timing script
+├── docs/
+│   ├── concepts.md     # The maths, explained step by step (Spanish)
+│   └── review.md       # Review of the original 2024 code (Spanish)
+├── legacy/             # Original TFG code, kept for reference
+└── Memoria_TFG_Denis_Stoyanov.pdf
 ```
 
 ---
@@ -102,30 +117,44 @@ algoritmo-ml-kem/
 
 ### Prerequisites
 
-- Python 3.8+
-- NumPy
+- Python 3.9+
+- NumPy (installed automatically)
 
 ### Installation
 
 ```bash
 git clone git@github.com:DenisSValentin/algoritmo-ml-kem.git
 cd algoritmo-ml-kem
-pip install numpy
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 ```
 
 ### Usage
 
-Run the interactive interface:
+```python
+from mlkem import MLKEM, ML_KEM_768
 
-```bash
-python ml_kem_main.py
+kem = MLKEM(ML_KEM_768)
+ek, dk = kem.keygen()          # Alice publishes ek, keeps dk
+K, c = kem.encaps(ek)          # Bob gets K and sends c
+assert kem.decaps(dk, c) == K  # Alice recovers the same K
 ```
 
-The CLI provides options to:
-1. Generate keypairs
-2. Encapsulate secrets
-3. Decapsulate ciphertexts
-4. Verify correctness
+### Visualizer
+
+```bash
+python -m visualizer
+```
+
+Opens a step-by-step walkthrough in the browser (Spanish): lattices, the ring R_q, key generation, encapsulation, compression, decapsulation on the Z_q "clock", implicit rejection when the ciphertext is tampered with, and a comparison of the three parameter sets. Keyboard: `←` `→` steps, `1` `2` `3` parameter set, `N` new run, `M` tamper with the ciphertext.
+
+### Tests and benchmark
+
+```bash
+pytest
+python -m benchmarks.bench
+```
 
 ---
 
@@ -135,7 +164,7 @@ This implementation was developed as a **Final Degree Project (TFG)** at the [Un
 
 **Author:** Denis Stoyanov Valentin D'Antonio  
 **Supervisor:** Jesús García Miranda  
-**Date:** July 2025
+**Date:** September 2024 (revised in 2026)
 
 ---
 
@@ -149,7 +178,7 @@ This implementation was developed as a **Final Degree Project (TFG)** at the [Un
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
 
 ---
 

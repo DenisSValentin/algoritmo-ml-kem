@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ML-KEM paso a paso</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>ML-KEM paso a paso</h1>
+      <p>Criptografía basada en retículos (FIPS 203) · TFG de Denis Valentin Stoyanov D'Antonio, Universidad de Granada</p>
+    </div>
+    <div class="controls">
+      <div class="segmented" id="paramPicker" role="radiogroup" aria-label="Conjunto de parámetros"></div>
+      <button id="btnNew" title="Repetir con claves y mensaje nuevos">Nueva ejecución <kbd>N</kbd></button>
+      <button id="btnTamper" aria-pressed="false" title="Invertir un bit del texto cifrado en el canal">Manipular c <kbd>M</kbd></button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Pasos"></nav>
+
+  <main>
+    <div id="banner"></div>
+    <div class="flow" id="flow"></div>
+    <div class="step-grid">
+      <article class="explain" id="explain"></article>
+      <div class="visual" id="visual"></div>
+    </div>
+  </main>
+
+  <footer class="navbar">
+    <button id="btnPrev">← Anterior</button>
+    <span class="hint">
+      <span><kbd>←</kbd> <kbd>→</kbd> pasos</span>
+      <span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> parámetros</span>
+      <span><kbd>N</kbd> nueva ejecución</span>
+      <span><kbd>M</kbd> manipular</span>
+    </span>
+    <button id="btnNext" class="primary">Siguiente →</button>
+  </footer>
+
+  <div id="tooltip" role="tooltip"></div>
+  <script src="app.js"></script>
+</body>
+</html>
