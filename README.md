@@ -89,7 +89,7 @@ This implementation follows the **FIPS 203** specification and includes:
 ## Project Structure
 
 ```
-Algoritmo_ML-KEM/
+algoritmo-ml-kem/
 ├── ml_kem.py           # Core ML-KEM implementation
 ├── ml_kem_main.py      # Interactive CLI interface
 ├── README.md           # This file
@@ -108,8 +108,8 @@ Algoritmo_ML-KEM/
 ### Installation
 
 ```bash
-git clone git@github.com:DenisSValentin/Algoritmo_ML-KEM.git
-cd Algoritmo_ML-KEM
+git clone git@github.com:DenisSValentin/algoritmo-ml-kem.git
+cd algoritmo-ml-kem
 pip install numpy
 ```
 
