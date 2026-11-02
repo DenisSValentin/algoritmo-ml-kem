@@ -303,6 +303,23 @@ function drawStar(ctx, x, y, outer = 10, inner = 4) {
   ctx.fill();
 }
 
+// La elección se compara con el punto más cercano a ★, que es lo que haría el
+// descifrado. Si el ruido es grande, ese punto ya no es el original.
+function guessMessage(guess, closest, secret, reveal) {
+  let message;
+  if (guess === closest) {
+    message = closest === secret
+      ? "¡Correcto! Ese es el punto más cercano a ★, y es el original."
+      : "¡Correcto! Ese es el más cercano a ★, pero no es el original.";
+  } else if (guess === secret) {
+    message = "Ese es el punto original, pero con este ruido ★ ya está más cerca de otro.";
+  } else {
+    return "No es ese punto.";
+  }
+  // Con la solución visible, ese aviso ya lo da el texto de la solución
+  return closest !== secret && !reveal ? `${message} Aquí el descifrado fallaría.` : message;
+}
+
 function latticeDemo(dimension) {
   const width = 560;
   const height = 340;
@@ -387,11 +404,11 @@ function latticeDemo(dimension) {
       ring(secret, PAL.ok, 11);
       if (closest !== secret) ring(closest, PAL.bad, 11);
     }
-    if (guess) ring(guess, guess === secret ? PAL.ok : PAL.bad, 7);
+    if (guess) ring(guess, guess === closest ? PAL.ok : PAL.bad, 7);
     drawStar(ctx, target[0], target[1]);
 
     const parts = [];
-    if (guess) parts.push(guess === secret ? "¡Correcto! Ese es el punto original." : "No es ese punto.");
+    if (guess) parts.push(guessMessage(guess, closest, secret, reveal));
     if (reveal) {
       parts.push(closest === secret
         ? "Verde: punto original. La línea discontinua es el ruido e."
@@ -587,7 +604,7 @@ function lattice3dDemo(dimension) {
     }
 
     const parts = [];
-    if (guess) parts.push(guess === closest ? "¡Correcto! Ese es el punto más cercano." : "No es ese punto.");
+    if (guess) parts.push(guessMessage(guess, closest, secret, reveal));
     if (reveal) {
       parts.push(closest === secret
         ? "Verde: punto original. La línea discontinua es el ruido e."
