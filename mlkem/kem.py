@@ -12,14 +12,13 @@ from __future__ import annotations
 
 import hmac
 import secrets
-from typing import Optional
 
 from . import kpke
 from .encoding import byte_decode, byte_encode
 from .hashes import g, h, j
 from .params import ML_KEM_768, ParameterSet
 
-Trace = Optional[dict]
+Trace = dict | None
 
 
 class InvalidInputError(ValueError):

@@ -152,7 +152,7 @@ trabaja sobre el array entero. En la versión nueva:
 | ML-KEM-768 | 24,9 | 0,21 | 33,8 | 0,29 | 62,5 | 0,36 |
 | ML-KEM-1024 | 33,6 | 0,29 | 45,4 | 0,37 | 84,8 | 0,45 |
 
-Entre 120 y 190 veces más rápido. "Antes" se midió con NumPy 1.26 (con NumPy 2 no arranca).
+Entre 120 y 190 veces más rápido. Las dos columnas se midieron con Python 3.9; "antes", con NumPy 1.26 (con NumPy 2 no arranca).
 Se puede repetir con `python -m benchmarks.bench`.
 
 ## ¿Python o Go?
@@ -197,8 +197,8 @@ vectores de NIST sería un buen complemento: mostraría las dos caras (didáctic
 |---|---|---|
 | Vectores de prueba oficiales (ACVP) | Saber que el resultado coincide con el estándar, no solo consigo mismo | `tests/test_vectors.py` |
 | Tests unitarios | NTT frente a multiplicación directa, redondeo frente a la definición exacta en racionales, codificación, manipulación de `c` | `tests/` |
-| Dependencias declaradas | `pip install -e .` instala exactamente lo necesario | `pyproject.toml` |
-| Integración continua | Pasa tests y linter en Python 3.9 + NumPy 1.x y Python 3.13 + NumPy 2.x en cada push | `.github/workflows/ci.yml` |
+| Dependencias declaradas y fijadas | `uv sync` instala exactamente las mismas versiones en cualquier máquina | `pyproject.toml`, `uv.lock` |
+| Integración continua | Pasa tests y linter en Python 3.11 + NumPy 1.26 (lo más antiguo admitido) y Python 3.15 + NumPy 2 (lo más reciente) en cada push | `.github/workflows/ci.yml` |
 | Benchmark reproducible | Mediana de N repeticiones de las tres operaciones | `benchmarks/bench.py` |
 | Separar librería e interfaz | El algoritmo no imprime nada ni lee del teclado | `mlkem/` frente a `visualizer/` |
 | Linter / formateador | Estilo uniforme, detectar errores comunes | `ruff` |

@@ -7,19 +7,24 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # uv descarga esta versión de Python, así que no depende de lo que traiga el runner
+      UV_PYTHON: ${{ matrix.python }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - python: "3.9"
+          # La versión mínima admitida, con NumPy 1.x
+          - python: "3.11"
             numpy: "numpy<2"
-          - python: "3.13"
+          # La más reciente, con NumPy 2.x
+          - python: "3.15"
             numpy: "numpy>=2"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-      - run: pip install "${{ matrix.numpy }}" -e ".[dev]"
-      - run: ruff check .
-      - run: pytest -q
-      - run: python -m benchmarks.bench -n 50
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv pip install "${{ matrix.numpy }}"
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync pytest -q
+      - run: uv run --no-sync python -m benchmarks.bench -n 50

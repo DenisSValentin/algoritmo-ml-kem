@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Standard-FIPS%20203-003B36?style=for-the-badge" alt="FIPS 203">
-  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/NIST-Post--Quantum-FF6F00?style=for-the-badge" alt="NIST PQC">
   <img src="https://img.shields.io/badge/NIST%20ACVP-passing-2E7D32?style=for-the-badge" alt="NIST ACVP vectors">
   <img src="https://img.shields.io/badge/License-MIT-yellowgreen?style=for-the-badge" alt="License">
@@ -76,15 +76,26 @@ A full explanation of the maths (modular arithmetic, the ring R_q, lattices, LWE
 
 ### Installation
 
-Requires Python 3.9 or newer. NumPy is installed automatically.
+The project is managed with [uv](https://docs.astral.sh/uv/), which also installs the right Python version (3.15, set in `.python-version`). Python 3.11 or newer is supported.
 
 ```bash
 git clone git@github.com:DenisSValentin/algoritmo-ml-kem.git
 cd algoritmo-ml-kem
+uv sync
+```
+
+`uv sync` creates `.venv/` with the exact versions from `uv.lock`. Prefix any command with `uv run` to use that environment, e.g. `uv run python`.
+
+<details>
+<summary>Without uv</summary>
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e . --group dev   # pip 25.1 or newer
 ```
+
+</details>
 
 ### Using the library
 
@@ -104,7 +115,7 @@ The deterministic algorithms from the standard (`keygen_internal`, `encaps_inter
 ### Visualizer
 
 ```bash
-python -m visualizer
+uv run python -m visualizer
 ```
 
 It opens `http://127.0.0.1:8000` in the browser with a nine-step walkthrough (in Spanish):
@@ -124,19 +135,19 @@ Keyboard: `←` `→` change step, `1` `2` `3` change parameter set, `N` new run
 ### Tests and benchmark
 
 ```bash
-pytest
-python -m benchmarks.bench
+uv run pytest
+uv run python -m benchmarks.bench
 ```
 
-The tests include a subset of the official **NIST ACVP vectors** (key generation, encapsulation, decapsulation with modified ciphertexts, and key checks), plus unit tests that compare the NTT with schoolbook multiplication and the rounding with its exact rational definition. CI runs them on Python 3.9 with NumPy 1.x and on Python 3.13 with NumPy 2.x.
+The tests include a subset of the official **NIST ACVP vectors** (key generation, encapsulation, decapsulation with modified ciphertexts, and key checks), plus unit tests that compare the NTT with schoolbook multiplication and the rounding with its exact rational definition. CI runs them on the oldest supported combination (Python 3.11 with NumPy 1.26) and the newest (Python 3.15 with NumPy 2).
 
 | Parameter set | KeyGen | Encaps | Decaps |
 |---|---|---|---|
-| ML-KEM-512 | 0.15 ms | 0.21 ms | 0.28 ms |
-| ML-KEM-768 | 0.21 ms | 0.29 ms | 0.36 ms |
-| ML-KEM-1024 | 0.29 ms | 0.37 ms | 0.45 ms |
+| ML-KEM-512 | 0.13 ms | 0.19 ms | 0.25 ms |
+| ML-KEM-768 | 0.19 ms | 0.25 ms | 0.33 ms |
+| ML-KEM-1024 | 0.27 ms | 0.33 ms | 0.41 ms |
 
-<sub>Median on an Apple M5 Pro.</sub>
+<sub>Median on an Apple M5 Pro, Python 3.15, NumPy 2.5.</sub>
 
 ---
 
@@ -201,6 +212,7 @@ The 2024 code worked end to end (both parties always obtained the same key), but
 
 **Tooling**
 - Tests with the NIST ACVP vectors, `pyproject.toml`, GitHub Actions CI, `ruff` and a benchmark script.
+- Managed with uv, with a lock file (`uv.lock`). Minimum Python raised from 3.9 (end of life since October 2025) to 3.11.
 
 **Interface**
 - The keyboard-driven terminal menu, which only reported whether each step succeeded, has been replaced by the web visualizer described above.

@@ -8,10 +8,9 @@ No se deben usar: tienen dos desviaciones respecto a FIPS 203 final que los hace
 incompatibles con otras implementaciones, usan un generador aleatorio no criptográfico y no
 funcionan con NumPy 2. Todo está explicado en [docs/review.md](../docs/review.md).
 
-Para ejecutarlos hace falta NumPy 1.x:
+Para ejecutarlos hace falta NumPy 1.x. Con uv, sin tocar el entorno del proyecto:
 
 ```bash
-pip install "numpy<2"
 cd legacy
-python ml_kem_main.py
+uv run --no-project --python 3.11 --with "numpy<2" python ml_kem_main.py
 ```

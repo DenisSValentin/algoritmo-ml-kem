@@ -10,8 +10,6 @@ muestre exactamente lo que calcula el algoritmo real, sin reimplementarlo aparte
 
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
 
 from .encoding import byte_decode, byte_encode, compress, decompress
@@ -20,7 +18,7 @@ from .params import N, ParameterSet, Q
 from .ring import dot_ntt, inverse_ntt, matrix_vector_ntt, ntt
 from .sampling import sample_ntt, sample_poly_cbd
 
-Trace = Optional[dict]
+Trace = dict | None
 
 
 def expand_matrix(rho: bytes, k: int) -> np.ndarray:
