@@ -1,7 +1,7 @@
 "use strict";
 
-// Visualizador de ML-KEM. Todos los datos vienen de /api/exchange, que ejecuta la
-// implementación real en Python y devuelve sus valores intermedios.
+// Visualizador de ML-KEM. Todos los datos vienen de la implementación real en Python, que se
+// ejecuta en el propio navegador con Pyodide (pyodide-worker.js) y devuelve sus valores intermedios.
 
 const Q = 3329;
 const PARAMS = [
@@ -10,7 +10,42 @@ const PARAMS = [
   { name: "ML-KEM-1024", k: 4, category: 5, aes: "AES-256", failure: "2⁻¹⁷⁵" },
 ];
 
+// El reloj del navegador solo tiene una precisión de 0,1–1 ms: cada medida es una tanda de llamadas
+const BENCH_REPETITIONS = 30;
+const BENCH_BATCH = 10;
+
 const state = { params: "ML-KEM-768", step: 0, tamper: false, data: null, bench: null, loading: false, latticeView: "2d" };
+
+// ------------------------------------------------------------------ Python en el navegador
+
+// python("exchange", ...) llama a la función de Python del mismo nombre en el worker y
+// devuelve su resultado ya convertido de JSON
+const python = (() => {
+  const worker = new Worker("pyodide-worker.js", { type: "module" });
+  const pending = new Map();
+  let nextId = 0;
+  worker.addEventListener("message", ({ data }) => {
+    if (data.status) {
+      const status = document.getElementById("loadStatus");
+      if (status) status.textContent = data.status;
+      return;
+    }
+    const { resolve, reject } = pending.get(data.id);
+    pending.delete(data.id);
+    if (data.error) reject(new Error(data.error));
+    else resolve(JSON.parse(data.result));
+  });
+  worker.addEventListener("error", (event) => {
+    event.preventDefault();
+    for (const { reject } of pending.values()) reject(new Error(event.message || "el worker de Pyodide ha fallado"));
+    pending.clear();
+  });
+  return (fn, ...args) => new Promise((resolve, reject) => {
+    const id = nextId++;
+    pending.set(id, { resolve, reject });
+    worker.postMessage({ id, fn, args });
+  });
+})();
 
 // ------------------------------------------------------------------ utilidades DOM
 
@@ -1107,11 +1142,17 @@ const STEPS = [
             h("td", {}, `${p.category} (≈ ${p.aes})`),
             h("td", {}, benchCell(p.name, "keygen")), h("td", {}, benchCell(p.name, "encaps")), h("td", {}, benchCell(p.name, "decaps")));
         }));
-      const button = h("button", { class: "primary" }, state.bench ? "Volver a medir" : "Medir en este ordenador");
+      const button = h("button", { class: "primary" }, state.bench ? "Volver a medir" : "Medir en este navegador");
       button.addEventListener("click", async () => {
         button.disabled = true;
         button.textContent = "Midiendo…";
-        state.bench = await (await fetch("/api/benchmark")).json();
+        try {
+          state.bench = await python("bench", BENCH_REPETITIONS, BENCH_BATCH);
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = `No se pudo medir: ${error.message}`;
+          throw error;
+        }
         render();
       });
       const sizeBars = [["X25519", 32], ["RSA-3072", 384], ...PARAMS.map((p) => [p.name, sizes[p.name][0]])];
@@ -1121,7 +1162,7 @@ const STEPS = [
           <p>Pasar de ML-KEM-512 a ML-KEM-1024 cambia sobre todo <b>k</b>: un retículo de más dimensiones es más difícil de atacar, pero las claves y los textos cifrados son más grandes.</p>
           <p>Las categorías 1, 3 y 5 de NIST equivalen aproximadamente a la dificultad de romper AES-128, AES-192 y AES-256. ML-KEM-768 es la opción recomendada por defecto.</p>
           <p>Comparado con lo que se usa hoy, las claves son más grandes (una clave pública X25519 ocupa 32 bytes), pero las operaciones son muy rápidas. Chrome, Firefox y Cloudflare ya lo usan en TLS combinado con X25519 (<code>X25519MLKEM768</code>), por si algún día se descubre un ataque contra uno de los dos.</p>
-          <p class="note">Los tiempos son de esta implementación en Python con NumPy. Una implementación en C o Go tarda en torno a 10–50 µs.</p>`,
+          <p class="note">Los tiempos se miden en tu navegador: esta implementación en Python con NumPy, compilada a WebAssembly (Pyodide), mediana de ${BENCH_REPETITIONS} tandas de ${BENCH_BATCH} llamadas. No son comparables con las cifras nativas de <a href="https://github.com/DenisSValentin/algoritmo-ml-kem/blob/main/docs/review.md">docs/review.md</a> (<code>python -m benchmarks.bench</code>), que suelen ser más bajas. Una implementación en C o Go tarda en torno a 10–50 µs.</p>`,
         visual: h("div", {},
           h("section", {}, h("h4", {}, "Parámetros, tamaños y tiempos"), h("div", { style: "overflow-x:auto" }, table), h("div", { class: "controls-line" }, button)),
           h("section", {},
@@ -1187,16 +1228,35 @@ function render() {
   $("visual").replaceChildren(visual);
 }
 
+function showLoader() {
+  $("explain").replaceChildren(h("div", { class: "loader" },
+    h("div", { class: "spinner", "aria-hidden": "true" }),
+    h("div", {},
+      h("h2", {}, "Preparando Python en tu navegador"),
+      h("p", { id: "loadStatus", role: "status" }, "Arrancando…"),
+      h("p", { class: "note" }, "El visualizador ejecuta la implementación real en Python dentro de la página, con Pyodide. La primera vez descarga unos 10 MB y tarda unos segundos; después el navegador lo guarda en caché."))));
+}
+
+function showError(error) {
+  for (const id of ["banner", "flow", "visual"]) $(id).replaceChildren();
+  $("explain").replaceChildren(
+    h("h2", {}, "No se pudo ejecutar Python en el navegador"),
+    h("p", { class: "banner" }, error.message),
+    h("p", {}, "Pyodide se descarga de cdn.jsdelivr.net: comprueba la conexión y que ninguna extensión lo bloquee, y recarga la página."),
+    h("p", { class: "note" }, "Si has abierto index.html directamente como fichero, arranca el servidor local con uv run ml-kem-visualizer."));
+}
+
 async function load() {
   state.loading = true;
-  document.body.classList.add("loading");
+  // La primera vez se ve el indicador de carga; después basta con atenuar la página
+  if (state.data) document.body.classList.add("loading");
+  else showLoader();
   try {
-    const query = new URLSearchParams({ params: state.params, tamper: state.tamper ? "1" : "0" });
-    const response = await fetch(`/api/exchange?${query}`);
-    state.data = await response.json();
+    state.data = await python("exchange", state.params, state.tamper, null);
   } catch (error) {
-    $("explain").innerHTML = `<h2>No se pudo conectar con el servidor</h2><p>Arranca el visualizador con <code>python -m visualizer</code> y abre la dirección que indica.</p>`;
-    throw error;
+    state.data = null;
+    showError(error);
+    console.error(error);
   } finally {
     state.loading = false;
     document.body.classList.remove("loading");

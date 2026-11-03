@@ -292,6 +292,16 @@ table.compare.plain th, table.compare.plain td { text-align: left; }
 
 .loading { opacity: .55; transition: opacity .2s; }
 
+.loader { display: flex; gap: 16px; align-items: flex-start; }
+.loader h2 { margin-top: 0; }
+.spinner {
+  flex: none; width: 28px; height: 28px; margin-top: 2px;
+  border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
 @media (max-width: 900px) {
   .step-grid { grid-template-columns: 1fr; }
   .flow { grid-template-columns: 1fr; }

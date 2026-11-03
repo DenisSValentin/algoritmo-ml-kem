@@ -1,8 +1,10 @@
 # ML-KEM explicado paso a paso
 
 Esta guía explica, sin dar nada por sabido, las matemáticas que hay detrás de ML-KEM y
-cómo se traducen en el código. El visualizador (`python -m visualizer`) enseña lo mismo
-con una ejecución real; conviene tenerlo abierto mientras se lee.
+cómo se traducen en el código. El visualizador enseña lo mismo con una ejecución real;
+conviene tenerlo abierto mientras se lee: está en
+<https://denissvalentin.github.io/algoritmo-ml-kem/> y en local se arranca con
+`uv run ml-kem-visualizer`.
 
 ## 0. El problema: acordar una clave en público
 

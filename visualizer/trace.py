@@ -139,7 +139,11 @@ def run_exchange(params_name: str, tamper: bool = False, seed: str | None = None
     }
 
 
-def benchmark(repetitions: int = 30) -> list[dict]:
+def benchmark(repetitions: int = 30, batch: int = 1) -> list[dict]:
+    """Mediana en ms de `repetitions` medidas de `batch` llamadas seguidas cada una.
+
+    En el navegador el reloj solo tiene una precisión de 0,1–1 ms, así que allí se mide en tandas.
+    """
     rows = []
     for params in PARAMETER_SETS.values():
         kem = MLKEM(params)
@@ -155,8 +159,9 @@ def benchmark(repetitions: int = 30) -> list[dict]:
             times = []
             for _ in range(repetitions):
                 start = time.perf_counter()
-                fn()
-                times.append(time.perf_counter() - start)
+                for _ in range(batch):
+                    fn()
+                times.append((time.perf_counter() - start) / batch)
             row[label] = float(np.median(times) * 1000)
         rows.append(row)
     return rows

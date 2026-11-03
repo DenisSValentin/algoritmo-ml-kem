@@ -21,7 +21,7 @@ This repository started as my **Final Degree Project (TFG)** at the University o
 It contains:
 
 - **`mlkem/`** — the implementation, one module per section of the standard, verified against the official NIST test vectors.
-- **`visualizer/`** — a step-by-step web app that runs the real implementation and shows what happens inside: the lattice problem, the polynomials, the noise, and how the receiver removes the "mask" to recover the message.
+- **`visualizer/`** — a step-by-step web app that runs the real implementation and shows what happens inside: the lattice problem, the polynomials, the noise, and how the receiver removes the "mask" to recover the message. **Try it online: [denissvalentin.github.io/algoritmo-ml-kem](https://denissvalentin.github.io/algoritmo-ml-kem/)**.
 - **`docs/`** — the maths explained step by step, and an errata for the original thesis code.
 - **`Memoria_TFG_Denis_Stoyanov.pdf`** — the thesis (Spanish), as it was submitted.
 - **`legacy/`** — the original 2024 code, kept for reference.
@@ -114,11 +114,19 @@ The deterministic algorithms from the standard (`keygen_internal`, `encaps_inter
 
 ### Visualizer
 
+**Online:** <https://denissvalentin.github.io/algoritmo-ml-kem/>
+
+It is a static page: the real `mlkem/` code runs inside your browser with [Pyodide](https://pyodide.org) (Python and NumPy compiled to WebAssembly), so nothing is sent to a server. The first visit downloads about 10 MB and takes a few seconds; after that the browser caches it. A GitHub Actions workflow ([`pages.yml`](.github/workflows/pages.yml)) publishes `visualizer/static/` together with the Python files on every push to `main`.
+
+**Locally:**
+
 ```bash
-uv run python -m visualizer
+uv run ml-kem-visualizer
 ```
 
-It opens `http://127.0.0.1:8000` in the browser with a nine-step walkthrough (in Spanish):
+It opens `http://127.0.0.1:8000` (`--port` and `--no-browser` are available). The local server only serves the files; the page works exactly as online, Pyodide included, so it needs an internet connection the first time.
+
+Both show a nine-step walkthrough (in Spanish):
 
 1. **The idea** — what a KEM does, with the result of a real run.
 2. **Lattices** — a 2D lattice where you try to find the closest point, and see what happens when the noise grows.
@@ -128,7 +136,7 @@ It opens `http://127.0.0.1:8000` in the browser with a nine-step walkthrough (in
 6. **Compression** — how many bytes it saves and how much noise it adds.
 7. **Decaps** — the 256 coefficients on the Z_q clock, before and after removing the mask.
 8. **Verification** — re-encryption, and implicit rejection when the ciphertext is tampered with.
-9. **Comparison** — the three parameter sets, with timings measured on your machine.
+9. **Comparison** — the three parameter sets, with timings measured in your browser. These run on WebAssembly and are not comparable with the native figures below.
 
 Keyboard: `←` `→` change step, `1` `2` `3` change parameter set, `N` new run, `M` flip a bit of the ciphertext in transit.
 
@@ -163,7 +171,7 @@ algoritmo-ml-kem/
 │   ├── hashes.py       #   G, H, J, PRF, XOF                 (§4.1)
 │   ├── kpke.py         #   K-PKE: KeyGen, Encrypt, Decrypt   (§5)
 │   └── kem.py          #   ML-KEM: KeyGen, Encaps, Decaps    (§6, §7)
-├── visualizer/         # Web visualizer (standard-library HTTP server + plain JS)
+├── visualizer/         # Web visualizer (plain JS + Pyodide; static/ is what GitHub Pages publishes)
 ├── tests/              # Unit tests and NIST ACVP vectors
 ├── benchmarks/         # Timing script
 ├── docs/

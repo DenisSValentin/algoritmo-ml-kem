@@ -1,0 +1,44 @@
+name: Pages
+
+# Publica el visualizador como sitio estático. El código Python no corre en GitHub: se copia
+# tal cual bajo py/ y el navegador lo ejecuta con Pyodide (ver visualizer/static/pyodide-worker.js).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una publicación cada vez, sin cancelar la que esté en curso
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Montar el sitio en _site/
+        run: |
+          mkdir -p _site/py/mlkem _site/py/visualizer
+          cp -r visualizer/static/. _site/
+          cp mlkem/*.py _site/py/mlkem/
+          cp visualizer/__init__.py visualizer/trace.py _site/py/visualizer/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

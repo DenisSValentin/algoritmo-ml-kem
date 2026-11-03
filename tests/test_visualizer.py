@@ -1,9 +1,13 @@
 import json
+import re
+from pathlib import Path
 
 import pytest
 
 from mlkem import MLKEM, PARAMETER_SETS
 from visualizer.trace import _seeds, run_exchange
+
+ROOT = Path(__file__).parent.parent
 
 
 @pytest.mark.parametrize("name", list(PARAMETER_SETS))
@@ -28,3 +32,11 @@ def test_tampered_exchange_is_rejected():
     assert not data["decaps"]["accepted"]
     assert not data["decaps"]["keys_match"]
     assert data["decaps"]["K_final"] == data["decaps"]["K_bar"]
+
+
+def test_browser_downloads_every_module():
+    """El worker de Pyodide descarga una lista fija de ficheros: que no se quede atrás."""
+    worker = (ROOT / "visualizer" / "static" / "pyodide-worker.js").read_text()
+    listed = set(re.findall(r'"((?:mlkem|visualizer)/\w+\.py)"', worker))
+    expected = {f"mlkem/{path.name}" for path in (ROOT / "mlkem").glob("*.py")}
+    assert listed == expected | {"visualizer/__init__.py", "visualizer/trace.py"}
