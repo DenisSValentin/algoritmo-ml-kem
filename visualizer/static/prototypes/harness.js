@@ -7,11 +7,11 @@
 // Única desviación del contrato de PICKER.md: la app ya usa 1 2 3 y ← → (parámetros y pasos),
 // así que el selector responde a Mayús + 1/2/3, Mayús + ←/→ y Mayús + R.
 
-const VARIANTS = ["linea", "estandar", "vidrio"];
+const VARIANTS = ["riel", "capa", "hilo"];
 const THEME_COLOR = {
-  linea: { light: "#f3f5f8", dark: "#0d1219" },
-  estandar: { light: "#ffffff", dark: "#131416" },
-  vidrio: { light: "#e8edf6", dark: "#07090f" },
+  riel: { light: "#eef1f6", dark: "#0a0d14" },
+  capa: { light: "#f4f5f8", dark: "#0b0d12" },
+  hilo: { light: "#eef1f6", dark: "#0a0d14" },
 };
 
 const root = document.documentElement;
@@ -41,7 +41,6 @@ function mount() {
   root.removeAttribute("data-entering");
   clearTimeout(enterTimer);
   window.mlkemApp?.render();
-  if (VARIANTS[current] === "vidrio") drawField();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     root.setAttribute("data-entering", "");
     enterTimer = setTimeout(() => root.removeAttribute("data-entering"), 900);
@@ -53,16 +52,14 @@ function setActive(i) {
   current = i;
   const name = VARIANTS[i];
   // media="not all" en vez de disabled: así las tres hojas se descargan al principio y el cambio es instantáneo
-  for (const sheet of sheets) sheet.media = sheet.dataset.variantCss === name ? "all" : "not all";
+  for (const sheet of sheets) sheet.media = sheet.dataset.variantCss.split(" ").includes(name) ? "all" : "not all";
   root.dataset.variant = name;
   items.forEach((el, j) => {
     el.toggleAttribute("data-active", j === i);
     if (j === i) el.setAttribute("aria-current", "true");
     else el.removeAttribute("aria-current");
   });
-  // Vidrio ocupa el centro inferior con su barra de pasos: el selector sube
-  if (name === "vidrio") picker.setAttribute("data-position", "top");
-  else picker.removeAttribute("data-position");
+  placePicker();
   moveHighlight();
   syncThemeColor();
   const url = new URL(location);
@@ -74,7 +71,15 @@ function setActive(i) {
 items.forEach((el, i) => el.addEventListener("click", () => setActive(i)));
 replay?.addEventListener("click", mount);
 window.addEventListener("resize", moveHighlight);
-darkScheme.addEventListener("change", () => { syncThemeColor(); if (VARIANTS[current] === "vidrio") drawField(); });
+darkScheme.addEventListener("change", syncThemeColor);
+
+// Capa en móvil lleva los pasos en un dock abajo: ahí el selector sube
+const narrow = window.matchMedia("(max-width: 900px)");
+function placePicker() {
+  if (VARIANTS[current] === "capa" && narrow.matches) picker.setAttribute("data-position", "top");
+  else picker.removeAttribute("data-position");
+}
+narrow.addEventListener("change", placePicker);
 
 document.addEventListener("keydown", (e) => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
@@ -88,64 +93,13 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
 });
 
-// ------------------------------------------------------------------ fondo de Vidrio
+// ------------------------------------------------------------------ fondo y vidrio
 
-// El retículo de fondo se dibuja una vez (y al cambiar el tamaño o el tema). Al cambiar de paso
-// solo se desplaza con transform, así el desenfoque del vidrio no se recalcula en cada fotograma.
-const fieldCanvas = document.getElementById("field");
-function drawField() {
-  if (!fieldCanvas || VARIANTS[current] !== "vidrio") return;
-  const margin = 160;
-  const width = window.innerWidth + 2 * margin;
-  const height = window.innerHeight + 2 * margin;
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  fieldCanvas.width = width * ratio;
-  fieldCanvas.height = height * ratio;
-  fieldCanvas.style.width = `${width}px`;
-  fieldCanvas.style.height = `${height}px`;
-  const ctx = fieldCanvas.getContext("2d");
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  const css = getComputedStyle(root);
-  const dot = css.getPropertyValue("--field-dot").trim() || "rgba(120,130,160,.5)";
-  const line = css.getPropertyValue("--field-line").trim() || "rgba(120,130,160,.15)";
-  // La misma base que el retículo de juguete del paso 2, más grande
-  const b1 = [64, 12.5];
-  const b2 = [23.5, 57];
-  const origin = [width * 0.62, height * 0.42];
-  const n = 40;
-  ctx.strokeStyle = line;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let i = -n; i <= n; i++) {
-    // líneas de la celda fundamental, muy tenues: dan la sensación de cristal tallado
-    ctx.moveTo(origin[0] + i * b1[0] - n * b2[0], origin[1] - (i * b1[1] - n * b2[1]));
-    ctx.lineTo(origin[0] + i * b1[0] + n * b2[0], origin[1] - (i * b1[1] + n * b2[1]));
-  }
-  ctx.stroke();
-  ctx.fillStyle = dot;
-  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
-    const x = origin[0] + i * b1[0] + j * b2[0];
-    const y = origin[1] - (i * b1[1] + j * b2[1]);
-    if (x < -10 || x > width + 10 || y < -10 || y > height + 10) continue;
-    // Los puntos lejos del centro, más pequeños: profundidad sin perspectiva
-    const d = Math.hypot(x - origin[0], y - origin[1]) / Math.hypot(width, height);
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(1.1, 3.2 - d * 3.4), 0, 2 * Math.PI);
-    ctx.fill();
-  }
-}
-let resizeTimer = null;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(drawField, 150);
-});
-
-// Cada paso desplaza el retículo un poco: avanzar es moverse por él
+// Cada paso desplaza un poco las manchas de color del fondo: el vidrio lo refleja al avanzar
 document.addEventListener("mlkem:render", () => {
   const step = Number(root.dataset.step || 1) - 1;
-  root.style.setProperty("--field-x", `${-step * 16}px`);
-  root.style.setProperty("--field-y", `${-step * 7}px`);
+  root.style.setProperty("--field-x", `${-step * 22}px`);
+  root.style.setProperty("--field-y", `${-step * 9}px`);
 });
 
 // Brillo especular que sigue al puntero (solo ratón o trackpad). Una sola luz para todo el
@@ -155,7 +109,7 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
   let last = null;
   document.addEventListener("pointermove", (event) => {
     last = event;
-    if (frame || VARIANTS[current] !== "vidrio") return;
+    if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = null;
       root.style.setProperty("--mx", `${last.clientX}px`);

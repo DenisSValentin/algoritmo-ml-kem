@@ -1218,15 +1218,44 @@ function icon(name, size = 18) {
 // Quién actúa en cada paso: lo usan las marcas del recorrido
 const actorOf = (step) => (step.flow.alice ? "alice" : step.flow.bob ? "bob" : "none");
 
+// El selector de parámetros se crea una vez y luego solo cambia cuál está marcado: así la
+// pieza que marca la opción elegida (.seg-thumb) puede deslizarse de una a otra.
+const thumbObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) placeThumb(entry.target.closest(".segmented"), false);
+});
+
+function placeThumb(group, animate = true) {
+  const thumb = group?.querySelector(":scope > .seg-thumb");
+  const on = group?.querySelector(':scope > [aria-checked="true"]');
+  if (!thumb || !on || !on.offsetWidth) return;
+  const transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+  if (thumb.style.transform === transform && thumb.style.width === `${on.offsetWidth}px`) return; // ya está en su sitio
+  if (!animate) group.removeAttribute("data-ready");
+  thumb.style.width = `${on.offsetWidth}px`;
+  thumb.style.height = `${on.offsetHeight}px`;
+  thumb.style.transform = transform;
+  // La primera colocación (y la que sigue a un cambio de tamaño) va sin animación: se fija la
+  // posición leyendo el estilo y solo entonces se activa la transición para el siguiente cambio
+  if (!group.hasAttribute("data-ready")) {
+    void getComputedStyle(thumb).transform;
+    group.setAttribute("data-ready", "");
+  }
+}
+
 function renderParamPicker() {
   const picker = $("paramPicker");
-  picker.replaceChildren(...PARAMS.map((p, i) => h("button", {
-    role: "radio",
-    "aria-checked": String(p.name === state.params),
-    title: `Tecla ${i + 1}`,
-    onclick: () => selectParams(p.name),
-  }, h("span", { class: "param-name" }, p.name.replace("ML-KEM-", ""), h("span", { class: "param-prefix" }, "ML-KEM-")),
-    h("small", {}, `k = ${p.k} · ${fmt(p.k * 256)} dim.`))));
+  if (!picker.querySelector(".seg-thumb")) {
+    picker.replaceChildren(h("span", { class: "seg-thumb", "aria-hidden": "true" }), ...PARAMS.map((p, i) => h("button", {
+      role: "radio",
+      "data-name": p.name,
+      title: `Tecla ${i + 1}`,
+      onclick: () => selectParams(p.name),
+    }, h("span", { class: "param-name" }, p.name.replace("ML-KEM-", ""), h("span", { class: "param-prefix" }, "ML-KEM-")),
+      h("small", {}, `k = ${p.k} · ${fmt(p.k * 256)} dim.`))));
+    picker.querySelectorAll("button").forEach((b) => thumbObserver.observe(b));
+  }
+  for (const b of picker.querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.name === state.params));
+  placeThumb(picker);
 }
 
 function renderStepper() {
@@ -1367,6 +1396,7 @@ window.addEventListener("hashchange", () => {
 function selectParams(name) {
   if (name === state.params) return;
   state.params = name;
+  renderParamPicker(); // la selección se desliza ya, sin esperar a que Python termine
   load();
 }
 

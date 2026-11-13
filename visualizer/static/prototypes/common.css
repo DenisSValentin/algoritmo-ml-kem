@@ -114,6 +114,16 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .segmented button + button { border-left: 1px solid var(--border); }
 .segmented button small { color: var(--muted); font-size: 0.6875rem; white-space: nowrap; }
 .segmented button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
+
+/* Pieza que marca la opción elegida y se desliza al cambiar (la colocan los scripts) */
+.segmented { position: relative; }
+.segmented > button { position: relative; z-index: 1; }
+.seg-thumb { display: none; position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .segmented[data-ready] > .seg-thumb {
+    transition: transform var(--thumb-duration, 320ms) var(--thumb-ease, var(--ease-out)), width var(--thumb-duration, 320ms) var(--thumb-ease, var(--ease-out));
+  }
+}
 .segmented button[aria-checked="true"] small { color: inherit; opacity: 0.8; }
 .param-name { display: inline-flex; flex-direction: row-reverse; font-weight: 700; }
 .param-prefix { font-weight: 400; opacity: 0.75; }
@@ -308,4 +318,8 @@ table.compare.plain th, table.compare.plain td { text-align: left; white-space: 
 
 @media (max-width: 900px) {
   .keys { grid-template-columns: 1fr; }
+}
+/* En el móvil la columna de Alice y Bob es tan estrecha que el secreto se partía letra a letra */
+@media (max-width: 640px) {
+  .party-secret { display: none; }
 }

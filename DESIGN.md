@@ -3,9 +3,9 @@
 Sistema visual del visualizador de ML-KEM (`visualizer/`). Producto y público: `PRODUCT.md`.
 Crítica del diseño de partida: `docs/design-critique.md`.
 
-> **Estado (2026-11-13): en exploración.** Hay tres direcciones construidas y funcionando en
-> `visualizer/static/prototypes/` (selector en local). Denis elige qué le gusta de cada una; lo
-> elegido se apunta en «Decisiones de Denis» y se convierte en el diseño publicado. Hasta entonces
+> **Estado (2026-11-13): en exploración, segunda ronda.** Hay tres direcciones construidas y
+> funcionando en `visualizer/static/prototypes/` (selector en local): Riel, Capa e Hilo. Lo que
+> Denis elige se apunta en «Decisiones de Denis» y se convierte en el diseño publicado. Hasta entonces
 > lo publicado sigue siendo `visualizer/static/{index.html,style.css,app.js}` sin cambios.
 > **Antes de mergear a `main`:** pasar el diseño elegido a esos ficheros y borrar
 > `visualizer/static/prototypes/`; si no, `pages.yml` la publicaría en `/prototypes/`.
@@ -67,113 +67,126 @@ la columna de lectura se mantiene tranquila: letra de lectura, contraste real, 6
 - Selección, foco, scrollbars y `color-scheme` con la paleta. Iconos SVG de un mismo trazo
   (1,75 px), no caracteres. `#paso-N` reacciona a enlaces y a atrás/adelante.
 
-## Las tres direcciones
+## Primera ronda (descartada o absorbida)
 
-Las tres comparten lo de arriba, el mismo HTML y los mismos datos; cambian el mundo visual, la
-composición y el movimiento propio. Se eligieron con `impeccable` (lista de 7 mundos del público,
-tirada `seed:090010ae7dfc278d`) y el método de `prototype` (un eje distinto para cada una).
+Tres direcciones construidas el 2026-11-13 (commit `9e2742f`, ya no están en el selector):
 
-### A · Línea — eje: orientación y recorrido
+- **A · Línea:** el recorrido como línea de transporte, con la línea vertical del 1 al 9 a la
+  izquierda. Se quedó la línea; los botones eran demasiado planos.
+- **B · Estándar:** el visualizador como documento técnico tipo FIPS (STIX Two, columna única).
+  Descartada.
+- **C · Vidrio:** liquid glass sobre un retículo de puntos. Se quedó el material; el brillo del
+  ratón era enorme, los puntos del fondo se confundían con el vidrio y era demasiado transparente.
 
-- **Idea:** el protocolo es un viaje en una línea de transporte entre dos terminales, Alice y Bob.
-  Los 9 pasos son paradas.
-- **Composición:** escritorio con la línea vertical fija a la izquierda (paradas con quién actúa
-  en cada una), terminales y canal arriba como un plano de línea, texto y figura a dos columnas.
-  En tableta y móvil la línea se tumba y queda fija arriba, como el plano del vagón.
-- **Color:** gris frío de andén `#f3f5f8`, tinta azul noche `#0f1724`, un único color de línea
-  violeta `#5432d3` (oscuro: `#a790ff`) que solo pinta el tramo recorrido y el activo.
-- **Tipografía:** Overpass (inspirada en la señalética de carreteras) y Overpass Mono.
-- **Firma:** ecuaciones en placas oscuras como carteles de andén; la bandera de la parada actual
-  se desliza por la línea; `ek` y `c` cruzan el canal como un tren.
-- **Préstamos de la tirada:** del mapa de orientación, «un solo color reservado al tramo activo»;
-  del banco de montaje, «el estado es una marca» (parada llena, bandera, hueca).
+## Segunda ronda: las tres direcciones en el selector
 
-### B · Estándar — eje: estructura de lectura
+Comparten el material de `prototypes/cristal.css` (vidrio, botones con relieve, fondo de color)
+y la línea vertical de pasos con la parada actual como gota de vidrio. Cambia **dónde vive la
+línea y qué es de vidrio**.
 
-- **Idea:** el visualizador como documento técnico, igual que el propio FIPS 203.
-- **Composición:** una sola columna de lectura (68 caracteres) con portada y regla gruesa, el
-  índice como cabecera corrida fija, el protocolo Alice/canal/Bob entre reglas como en un artículo,
-  y cada visualización como «Figura N» a ancho de página debajo del texto. Anterior/siguiente al
-  final, como secciones.
-- **Color:** papel blanco (no crema), tinta negra `#141414`, un azul de estándar `#1b4f9c` solo
-  para lo que se toca. Oscuro: `#131416` con tinta `#e9e7e2`.
-- **Tipografía:** STIX Two Text (la de la edición científica y matemática) para leer y titular;
-  la del sistema para controles.
-- **Firma:** ecuaciones entre reglas y numeradas «(1), (2)…» como los algoritmos del estándar;
-  marca de visto dibujada en el índice; el subrayado del índice se desliza al paso actual.
-- **Préstamo de la tirada:** de la cinta de procedencia, distinguir lo calculado de verdad de lo
-  ilustrativo: las figuras de datos reales van sin adorno y las demos llevan «de juguete» en el
-  título.
+### Riel — eje: la línea en su columna (Línea + Vidrio)
 
-### C · Vidrio — eje: material y profundidad (liquid glass)
+- **Idea:** el diseño A tal cual en estructura, pero con el material de C.
+- **Composición:** cabecera de vidrio arriba; la línea con nombres y quién actúa (Alice/Bob) en
+  una columna de vidrio fija a la izquierda; Alice/canal/Bob, texto y figura como láminas de
+  vidrio a la derecha. En tableta y móvil, la línea se tumba y queda fija arriba.
+- **Tipografía:** Overpass (señalética). Ecuaciones en placas oscuras de andén.
+- **Cuándo gana:** si lo que más te gustó de A fue la sensación de «mapa de línea».
 
-- **Idea:** en LWE el ruido esconde el punto del retículo como un cristal esmerilado; aquí la
-  interfaz entera es ese cristal flotando sobre un retículo de verdad.
-- **Composición:** cabecera, Alice/canal/Bob, explicación y figura como láminas de vidrio sobre el
-  retículo; los pasos en un *dock* flotante abajo con anterior/siguiente a los lados, como la barra
-  de pestañas de iOS 26.
-- **Color:** fondo `#e6ebf4` (oscuro `#06080e`) con resplandores que cambian según quién actúa:
-  frío con Alice, cálido con Bob, violeta en los pasos generales. Acento azul sistema `#0a5fe0`
-  (oscuro `#6e9bff` con texto oscuro).
-- **Tipografía:** la del sistema (SF en Apple), con peso 450 sobre el vidrio (vibrancia).
-- **Firma:** la lente (el paso y el parámetro elegidos son una gota de vidrio que refracta lo de
-  detrás y se desliza con un pelín de rebote); el vidrio se materializa al entrar.
-- **Préstamo de la tirada:** del registro de exposición, «solo una rampa fija de tonos»: tres
-  grosores de vidrio y ninguno más.
+### Capa — eje: el vidrio solo en la navegación (como iOS 26)
 
-## Liquid glass (solo en la dirección C, solo en esta app)
+- **Idea:** el contenido es opaco y tranquilo; lo único de vidrio es lo que flota encima: la
+  cabecera fija con los parámetros, la línea de pasos a la izquierda y los botones de avanzar
+  abajo a la derecha. Al desplazar, el texto y las figuras pasan por debajo del vidrio: eso es lo
+  que se ve refractado, nunca un dibujo de fondo.
+- **Composición:** la línea flota centrada a la izquierda (con nombres desde 1260 px; solo
+  números por debajo). En móvil la línea pasa a un dock abajo, entre «anterior» y «siguiente».
+- **Parámetros:** la opción elegida es una lente de vidrio que se desliza con un pequeño rebote.
+- **Tipografía:** la del sistema (SF en Apple).
+- **Cuándo gana:** si quieres el liquid glass más fiel a Apple y el texto más legible.
+
+### Hilo — eje: la línea atraviesa el contenido
+
+- **Idea:** la misma línea vertical, pero el paso actual se abre dentro de ella: arriba quedan
+  las paradas hechas (compactas, con marca de visto), luego la parada actual y su contenido
+  pegado a la línea, y debajo las que faltan.
+- **Composición:** una sola columna. Funciona igual en móvil, donde la línea se estrecha.
+- **Tipografía:** Atkinson Hyperlegible Next (diseñada para leer bien).
+- **Cuándo gana:** si quieres que el recorrido se lea de arriba abajo como una historia.
+
+### Común a las tres
+- **Botones con relieve:** cara con degradado, filo iluminado arriba, sombra con desplazamiento;
+  al pulsar se hunden 1 px. Lo elegido y lo principal, en el color de la línea con la misma luz.
+  «Manipular c» activo queda hundido, como un interruptor.
+- **Selector de parámetros:** pista hundida y la opción elegida sobresale; al cambiar de 512 a
+  768 o 1024, la pieza elegida **se desliza** (320 ms, ease-out; en Capa 380 ms con rebote).
+- **En oscuro, ninguna sombra de color** (el detector lo marca como halo de neón): las sombras
+  son negras.
+
+## Liquid glass (solo en esta app)
 
 No es un estándar global ni de otros proyectos: es una prueba aquí. Ninguna skill instalada lo
 define (`apple-design` solo cubre materiales translúcidos en general), así que esta es la
-definición.
+definición, corregida tras la primera ronda.
 
 ### Qué es
 El material de iOS 26: vidrio translúcido que deja ver lo de detrás desenfocado, lo **refracta**
-en los bordes, **refleja** la luz con un brillo especular, tiene **profundidad** (sombra y borde
-iluminado arriba) y **se adapta** al contenido de detrás.
+en los bordes, **refleja** la luz con un brillo especular, tiene **profundidad** (sombra y filo
+iluminado arriba) y **se adapta** a lo que tiene detrás.
 
-### Cómo se construye (`prototypes/vidrio.css`)
+### Cómo se construye
 | Capa | Qué hace | Cómo |
 |---|---|---|
-| Tinte + desenfoque | La lámina | `::before` con `background` del grosor y `backdrop-filter: blur() saturate()` |
-| Borde iluminado | Luz que entra por arriba y se apaga abajo | `::after` con `box-shadow` inset: 1 px claro arriba, contorno tenue, sombra interior abajo |
-| Brillo especular | Reflejo de una sola luz que sigue al puntero | `::after` con un `radial-gradient` en `--mx/--my` y `background-attachment: fixed` (todas las láminas reflejan la misma luz en su sitio); solo con ratón |
-| Refracción | La lente dobla lo de detrás en los bordes | `backdrop-filter: url(#lg-refract)`: `feDisplacementMap` con un mapa de bordes. Solo en Chromium (`.can-refract`); Safari y Firefox se quedan con desenfoque y brillo |
+| Lámina | Tinte + desenfoque | `::before` con el tinte del grosor y `backdrop-filter: blur() saturate(1.6)` |
+| Filo | Luz que entra por arriba y se apaga abajo | `::after` de 1 px (máscara que solo deja el borde) con degradado vertical |
+| Luz del puntero | Reflejo pequeño de una sola luz | en el filo, un círculo de **150 px**; dentro de la lámina, otro de **110 px** muy tenue (14 % en claro, 6 % en oscuro). Fijos a la ventana, así todas las láminas reflejan la misma luz. Solo con ratón |
+| Refracción | La gota dobla lo de detrás | `backdrop-filter: url(#lg-refract)` (`feDisplacementMap`). Solo en Chromium; Safari y Firefox, desenfoque y brillo |
 | Profundidad | Flota | sombra exterior suave con desplazamiento (`--glass-shadow`) |
-| Adaptación | Se tiñe según quién actúa | resplandores del fondo por fase (`data-phase`), fundido de 700 ms |
+| Adaptación | Se tiñe con quien actúa | Riel e Hilo: manchas de color de fondo, frías con Alice y cálidas con Bob (700 ms). Capa: lo que pasa por debajo es el propio contenido |
 
-El vidrio va en el **pseudo-elemento** y no en el elemento: así el elemento no es «raíz de fondo»
-y la lente que tiene dentro puede refractar la página de detrás y no solo el tinte de su lámina.
+El vidrio va en el **pseudo-elemento**, no en el elemento: así el elemento no es «raíz de fondo» y
+la gota que lleva dentro refracta la página de detrás y no solo el tinte de su lámina.
 
 ### Grosores (los únicos tres)
 | Grosor | Uso | Claro | Oscuro | Desenfoque |
 |---|---|---|---|---|
-| Fino | cabecera, dock, Alice/canal/Bob | blanco 42 % | `#1e2436` 42 % | 14 px |
-| Normal | figuras | blanco 58 % | `#161b2a` 56 % | 24 px |
-| Grueso | texto que se lee | blanco 76 % | `#101420` 72 % | 34 px |
+| Fino | cabecera, línea, Alice/canal/Bob | blanco 64 % | `#1a1f2e` 68 % | 16 px |
+| Normal | figuras; en Capa, toda la navegación | blanco 78 % | `#141825` 80 % | 24 px |
+| Grueso | texto que se lee | blanco 88 % | `#10131e` 88 % | 30 px |
 
-Controles dentro del vidrio: relleno translúcido **sin** desenfoque propio (vidrio sobre vidrio
-destroza la legibilidad).
+Ronda 1 usaba 42 / 58 / 76 %: era demasiado transparente. Controles dentro del vidrio: relleno
+translúcido **sin** desenfoque propio (vidrio sobre vidrio destroza la legibilidad).
 
 ### Reglas
-- **Contraste:** el texto solo va sobre el grosor normal o grueso; medido con el peor fondo debajo
-  (resplandor más oscuro): texto ≥ 15:1, secundario ≥ 6,9:1.
-- **`prefers-reduced-transparency`:** láminas opacas (`--surface`), sin desenfoque ni refracción,
-  retículo al 35 %.
+- **Detrás del vidrio, nunca un dibujo** (puntos, rejillas, líneas): se confunde con el propio
+  material. Solo color suave o el contenido real.
+- **Contraste:** medido con el peor fondo debajo (mancha de color más oscura y vidrio fino):
+  texto ≥ 13,8:1, secundario ≥ 6,3:1, verde de «correcto» 4,5:1.
+- **`prefers-reduced-transparency`:** láminas opacas (`--surface`), sin desenfoque ni refracción.
 - **`prefers-contrast: more`:** láminas opacas con borde del color del texto.
-- **`prefers-reduced-motion`:** el retículo no se desplaza, el vidrio no se materializa, la lente
-  no se desliza.
-- **Rendimiento:** el retículo de fondo se dibuja una sola vez (y al redimensionar o cambiar de
-  tema) en un `<canvas>`; al cambiar de paso solo se desplaza con `translate` (900 ms), nunca en
-  bucle. El retículo 3D del paso 2 se dibuja **encima** del vidrio, así que girarlo no obliga a
-  recalcular ningún desenfoque (redibujarlo cuesta < 1 ms). Lo caro es desplazar la página, porque
-  cada lámina vuelve a desenfocar lo de detrás: hay 7 láminas como máximo y la refracción solo en
-  dos piezas pequeñas.
+- **`prefers-reduced-motion`:** el fondo no se desplaza, el vidrio no se materializa, la gota y
+  la pieza de parámetros no se deslizan.
+- **Rendimiento:** el fondo no se dibuja en un lienzo: son degradados de CSS que solo se desplazan
+  con `translate` al cambiar de paso. El retículo 3D del paso 2 va **encima** del vidrio, así que
+  girarlo no obliga a recalcular ningún desenfoque. Lo caro es desplazar la página (cada lámina
+  vuelve a desenfocar lo de detrás): Riel tiene 5 láminas, Capa 3 e Hilo 4.
 - **Pendiente de comprobar en hardware real:** fluidez al desplazar en un iPhone y en un portátil
-  con gráfica integrada (la pestaña de pruebas de esta sesión estaba en segundo plano y no daba
+  con gráfica integrada (la pestaña de pruebas de estas sesiones estaba en segundo plano y no daba
   tiempos de fotograma fiables).
 
 ## Decisiones de Denis
 
-*(Vacío hasta que Denis compare los tres diseños. Aquí irá qué se queda de cada uno; cuando
-corrija algo, se apunta también con `learn-taste`.)*
+Ronda 1 (2026-11-13), con sus palabras:
+
+- **Estándar (B), descartado:** «el b no me gusta nada».
+- **De Línea (A) se queda la línea vertical de pasos:** «me gusta mucho su avance para que no te
+  pierdas, es decir, la línea que va desde el punto 1 al 9 en vertical, indicando donde estás».
+- **De Línea (A) no, los botones planos:** «no me gustan los botones, son muy planos, tanto para
+  cambiar de ML-KEM-512 al 768 como los de Anterior y Siguiente».
+- **De Vidrio (C) se queda el liquid glass**, con tres correcciones: «la luz brillante al rededor
+  del raton es inmensamente grande»; «que el fondo tenga puntitos confunde con el liquid glass»;
+  «quizás podría ser un poco menos transparente».
+- **Cambio de parámetros animado:** «al pasar de ml-kem-512, a 768 o a 1024 me falta la animacion
+  de transicion … se podria poner la animacion de deslizar».
+
+Ronda 2: pendiente de que compare Riel, Capa e Hilo.

@@ -1,26 +1,24 @@
 <!doctype html>
-<html lang="es" data-variant="linea">
+<html lang="es" data-variant="riel">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f3f5f8" id="themeColor">
+  <meta name="theme-color" content="#eef1f6" id="themeColor">
   <title>ML-KEM paso a paso · prototipos de diseño</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&family=Overpass+Mono:wght@400;600&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&family=Overpass+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&family=Atkinson+Hyperlegible+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="linea.css" data-variant-css="linea">
-  <link rel="stylesheet" href="estandar.css" data-variant-css="estandar" media="not all">
-  <link rel="stylesheet" href="vidrio.css" data-variant-css="vidrio" media="not all">
+  <link rel="stylesheet" href="cristal.css" data-variant-css="riel capa hilo">
+  <link rel="stylesheet" href="riel.css" data-variant-css="riel">
+  <link rel="stylesheet" href="capa.css" data-variant-css="capa" media="not all">
+  <link rel="stylesheet" href="hilo.css" data-variant-css="hilo" media="not all">
   <link rel="stylesheet" href="picker.css">
 </head>
 <body>
-  <!-- Fondo de la variante Vidrio: el retículo que se ve a través del cristal -->
-  <div class="field" aria-hidden="true">
-    <div class="field-glow"></div>
-    <canvas id="field"></canvas>
-  </div>
+  <!-- Fondo de color suave detrás del vidrio (sin dibujo: no compite con el material) -->
+  <div class="field" aria-hidden="true"><div class="field-glow"></div></div>
 
   <a class="skip" href="#explain">Saltar al contenido del paso</a>
 
@@ -77,9 +75,9 @@
   <!-- Selector de prototipos (chrome del método «prototype», no forma parte de ningún diseño) -->
   <nav class="proto-picker" aria-label="Prototype variants">
     <span class="proto-picker-highlight" aria-hidden="true"></span>
-    <button class="proto-picker-item" data-variant="linea" data-active aria-current="true">Línea</button>
-    <button class="proto-picker-item" data-variant="estandar">Estándar</button>
-    <button class="proto-picker-item" data-variant="vidrio">Vidrio</button>
+    <button class="proto-picker-item" data-variant="riel" data-active aria-current="true">Riel</button>
+    <button class="proto-picker-item" data-variant="capa">Capa</button>
+    <button class="proto-picker-item" data-variant="hilo">Hilo</button>
     <span class="proto-picker-divider" aria-hidden="true"></span>
     <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
   </nav>
