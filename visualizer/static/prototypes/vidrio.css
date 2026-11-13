@@ -1,0 +1,350 @@
+/* ==========================================================================
+   C · VIDRIO — liquid glass sobre el retículo.
+   La idea: en LWE el ruido esconde el punto del retículo como un cristal esmerilado. Aquí la
+   interfaz entera es ese cristal: capas de vidrio flotando sobre un retículo de verdad (la misma
+   base que el paso 2), que se desplaza un poco con cada paso. El vidrio refracta y refleja lo
+   que tiene detrás, brilla en los bordes y se tiñe según quién actúa (Alice frío, Bob cálido).
+   Tres grosores de material y nada más (fino, normal, grueso), definidos en DESIGN.md § Liquid
+   glass. Tipografía del sistema (SF en Apple), como en iOS.
+   ========================================================================== */
+
+:root {
+  --bg: #e6ebf4;
+  --surface: #ffffff;
+  --surface-2: rgba(255, 255, 255, 0.55);
+  --text: #0b1020;
+  --muted: #3c4558;
+  --border: rgba(15, 25, 50, 0.14);
+  --accent: #0a5fe0;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(10, 95, 224, 0.14);
+  --ok: #0c7541;
+  --ok-soft: rgba(30, 160, 90, 0.16);
+  --bad: #bb2418;
+  --on-bad: #ffffff;
+  --bad-soft: rgba(220, 60, 40, 0.14);
+  --neg: #1f6feb;
+  --pos: #e2590f;
+  --zero: #d9e0ec;
+  --bit0: #d9e0ec;
+  --bit1: #0b1020;
+  --radius: 24px;
+  --radius-sm: 12px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-read: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Material: tinte y desenfoque de los tres grosores */
+  --glass-thin: rgba(255, 255, 255, 0.42);
+  --glass-regular: rgba(255, 255, 255, 0.58);
+  --glass-thick: rgba(255, 255, 255, 0.76);
+  --glass-fill: rgba(255, 255, 255, 0.55);       /* controles dentro del vidrio: sin desenfoque propio */
+  --glass-rim-top: rgba(255, 255, 255, 0.95);
+  --glass-rim: rgba(255, 255, 255, 0.5);
+  --glass-shade: rgba(20, 35, 80, 0.10);
+  --glass-shadow: 0 1px 2px rgba(20, 35, 80, 0.06), 0 18px 40px -18px rgba(20, 35, 80, 0.35);
+  --glass-spec: rgba(255, 255, 255, 0.55);
+  --blur-thin: 14px;
+  --blur-regular: 24px;
+  --blur-thick: 34px;
+
+  /* Fondo */
+  --field-dot: rgba(35, 55, 110, 0.42);
+  --field-line: rgba(35, 55, 110, 0.07);
+  --glow-none-1: rgba(120, 90, 255, 0.30);
+  --glow-none-2: rgba(40, 170, 255, 0.24);
+  --glow-alice-1: rgba(20, 130, 255, 0.36);
+  --glow-alice-2: rgba(0, 200, 210, 0.26);
+  --glow-bob-1: rgba(255, 140, 40, 0.34);
+  --glow-bob-2: rgba(255, 70, 120, 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #06080e;
+    --surface: #161a26;
+    --surface-2: rgba(255, 255, 255, 0.07);
+    --text: #f2f4fa;
+    --muted: #b1b9ca;
+    --border: rgba(255, 255, 255, 0.13);
+    --accent: #6e9bff;
+    --on-accent: #04102b;
+    --accent-soft: rgba(110, 155, 255, 0.2);
+    --ok: #55d394;
+    --ok-soft: rgba(60, 200, 130, 0.16);
+    --bad: #ff8070;
+    --on-bad: #2a0905;
+    --bad-soft: rgba(255, 110, 90, 0.16);
+    --neg: #5b9bff;
+    --pos: #ff8a45;
+    --zero: #1c2232;
+    --bit0: #1c2232;
+    --bit1: #f2f4fa;
+
+    --glass-thin: rgba(30, 36, 54, 0.42);
+    --glass-regular: rgba(22, 27, 42, 0.56);
+    --glass-thick: rgba(16, 20, 32, 0.72);
+    --glass-fill: rgba(255, 255, 255, 0.07);
+    --glass-rim-top: rgba(255, 255, 255, 0.32);
+    --glass-rim: rgba(255, 255, 255, 0.10);
+    --glass-shade: rgba(0, 0, 0, 0.25);
+    --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 20px 44px -18px rgba(0, 0, 0, 0.7);
+    --glass-spec: rgba(255, 255, 255, 0.12);
+
+    --field-dot: rgba(170, 190, 255, 0.30);
+    --field-line: rgba(170, 190, 255, 0.06);
+    --glow-none-1: rgba(110, 70, 255, 0.34);
+    --glow-none-2: rgba(0, 140, 255, 0.22);
+    --glow-alice-1: rgba(0, 110, 255, 0.40);
+    --glow-alice-2: rgba(0, 190, 200, 0.24);
+    --glow-bob-1: rgba(255, 120, 30, 0.32);
+    --glow-bob-2: rgba(255, 50, 110, 0.24);
+  }
+}
+
+html { scroll-padding-bottom: 112px; }   /* el dock no tapa lo que tiene el foco */
+
+body {
+  background: var(--bg);
+  font-weight: 450;           /* texto sobre vidrio: un punto más de peso (vibrancia) */
+  letter-spacing: 0.003em;
+}
+
+/* --------------------------------------------------------------- el retículo de fondo */
+
+.field {
+  display: block; position: fixed; inset: -160px; z-index: -1; pointer-events: none;
+  translate: var(--field-x, 0) var(--field-y, 0);
+}
+.field canvas { position: absolute; inset: 0; }
+.field-glow, .field-glow::before, .field-glow::after {
+  position: absolute; inset: 0; content: "";
+  transition: opacity 700ms ease-out;
+}
+.field-glow {
+  background:
+    radial-gradient(48% 42% at 72% 28%, var(--glow-none-1), transparent 70%),
+    radial-gradient(40% 46% at 18% 78%, var(--glow-none-2), transparent 70%);
+}
+.field-glow::before {
+  opacity: 0;
+  background:
+    radial-gradient(50% 44% at 22% 26%, var(--glow-alice-1), transparent 70%),
+    radial-gradient(42% 48% at 70% 82%, var(--glow-alice-2), transparent 70%);
+}
+.field-glow::after {
+  opacity: 0;
+  background:
+    radial-gradient(50% 44% at 80% 24%, var(--glow-bob-1), transparent 70%),
+    radial-gradient(44% 46% at 26% 84%, var(--glow-bob-2), transparent 70%);
+}
+[data-phase="alice"] .field-glow::before, [data-phase="bob"] .field-glow::after { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .field { transition: translate 900ms var(--ease-out); }
+}
+
+/* --------------------------------------------------------------- el material
+   La capa de vidrio va en ::before (tinte + desenfoque) y el borde y el brillo en ::after.
+   Así el elemento no es «raíz de fondo» y la lente que lleva dentro puede refractar lo que hay
+   detrás de toda la página, no solo el tinte de su contenedor. */
+
+.masthead, .flow, .explain, .visual, .pager, .stepper .steps, #banner .banner {
+  position: relative; isolation: isolate;
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+}
+.masthead::before, .flow::before, .explain::before, .visual::before, .pager::before, .stepper .steps::before, #banner .banner::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; border-radius: inherit;
+  background: var(--glass-regular);
+  -webkit-backdrop-filter: blur(var(--blur-regular)) saturate(1.7);
+  backdrop-filter: blur(var(--blur-regular)) saturate(1.7);
+}
+.masthead::after, .flow::after, .explain::after, .visual::after, .pager::after, .stepper .steps::after, #banner .banner::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  /* borde que capta la luz arriba y se apaga abajo, más el reflejo del puntero */
+  box-shadow: inset 0 1px 0 var(--glass-rim-top), inset 0 0 0 1px var(--glass-rim), inset 0 -10px 24px -18px var(--glass-shade);
+  background: radial-gradient(420px circle at var(--mx, -9999px) var(--my, -9999px), var(--glass-spec), transparent 62%) fixed;
+}
+/* grosores */
+.masthead::before, .pager::before, .stepper .steps::before, .flow::before { background: var(--glass-thin); -webkit-backdrop-filter: blur(var(--blur-thin)) saturate(1.8); backdrop-filter: blur(var(--blur-thin)) saturate(1.8); }
+.explain::before { background: var(--glass-thick); -webkit-backdrop-filter: blur(var(--blur-thick)) saturate(1.6); backdrop-filter: blur(var(--blur-thick)) saturate(1.6); }
+
+/* Controles dentro del vidrio: relleno translúcido, sin desenfoque propio (vidrio sobre vidrio no) */
+button, .segmented, kbd { background: var(--glass-fill); border-color: var(--border); }
+button { border-radius: 999px; padding: 8px 14px; }
+button.primary { background: var(--accent); border-color: transparent; }
+.segmented { border-radius: 999px; padding: 3px; gap: 2px; }
+.segmented button { border-radius: 999px; background: transparent; border: 0; }
+.segmented button + button { border-left: 0; }
+.hex, .stat { background: var(--glass-fill); }
+.keybox { border-radius: var(--radius-sm); background: var(--glass-fill); }
+.visual-skeleton span { background: var(--glass-fill); }
+
+/* --------------------------------------------------------------- composición */
+
+.app { max-width: 1320px; margin: 0 auto; padding: 20px 24px 140px; }
+
+.masthead {
+  display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between;
+  padding: 16px 16px 16px 26px; margin: 56px 0 18px;
+}
+.brand h1 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.byline { margin: 4px 0 0; max-width: 60ch; color: var(--muted); font-size: 0.8125rem; line-height: 1.4; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.actions { display: flex; gap: 8px; }
+
+/* La lente: el elemento elegido es una gota de vidrio más clara que se desliza y refracta */
+.params button[aria-checked="true"],
+.steps [data-state="current"] a {
+  position: relative;
+  background: rgba(255, 255, 255, 0.5); color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.55), 0 4px 14px -6px rgba(20, 35, 80, 0.35);
+  -webkit-backdrop-filter: blur(3px) saturate(1.8) brightness(1.06);
+  backdrop-filter: blur(3px) saturate(1.8) brightness(1.06);
+}
+.can-refract .params button[aria-checked="true"],
+.can-refract .steps [data-state="current"] a {
+  backdrop-filter: url(#lg-refract) blur(1.5px) saturate(1.9) brightness(1.06);
+}
+@media (prefers-color-scheme: dark) {
+  .params button[aria-checked="true"],
+  .steps [data-state="current"] a {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 4px 14px -6px rgba(0, 0, 0, 0.6);
+  }
+}
+.params button[aria-checked="true"] small { color: var(--muted); opacity: 1; }
+
+/* --------------------------------------------------------------- Alice · canal · Bob */
+
+.flow {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 1.5fr) minmax(0, 1fr);
+  gap: 12px; align-items: center; padding: 10px; margin-bottom: 18px;
+}
+.party { padding: 10px 16px; border-radius: 18px; transition: background-color 300ms ease-out, box-shadow 300ms ease-out; }
+.party-bob { text-align: right; align-items: flex-end; }
+.party-name { font-size: 1.0625rem; }
+.party.active { background: var(--glass-fill); box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 4px var(--accent-soft); }
+.channel { gap: 8px; }
+.channel-name { text-align: center; }
+.wire { justify-content: center; padding: 5px 12px; border-radius: 999px; background: var(--glass-fill); }
+.wire[data-dir="rtl"] { justify-content: center; }
+.wire.active { color: var(--text); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.wire.tampered { color: var(--bad); box-shadow: inset 0 0 0 1.5px var(--bad); }
+.token { width: 22px; height: 22px; margin-top: -11px; background: radial-gradient(circle at 35% 30%, #fff, var(--accent) 70%); box-shadow: 0 2px 8px rgba(10, 60, 160, 0.4); }
+.wire.tampered .token { background: radial-gradient(circle at 35% 30%, #fff, var(--bad) 70%); }
+.tamper-tag { justify-content: center; }
+
+/* --------------------------------------------------------------- lectura y figura */
+
+.stage { scroll-margin-top: 16px; }
+.step-grid { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+.explain { padding: 28px 30px; outline: none; }
+.explain h2 { font-size: 1.625rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 16px; }
+.explain .formula { margin: 12px 0 16px; padding: 12px 16px; border-radius: var(--radius-sm); background: var(--glass-fill); box-shadow: inset 0 0 0 1px var(--border); font-size: 0.9375rem; }
+.explain code { padding: 1px 5px; border-radius: 6px; background: var(--glass-fill); }
+.visual { padding: 24px; min-height: 420px; overflow-x: auto; }
+.visual h4 { color: var(--text); font-weight: 650; }
+.visual section + section { padding-top: 22px; border-top: 1px solid var(--border); }
+table.compare tr.current td { background: var(--accent-soft); }
+#banner .banner { border-radius: 18px; background: transparent; margin-bottom: 14px; }
+#banner .banner::before { background: var(--bad-soft); }
+
+/* --------------------------------------------------------------- el dock: pasos y avanzar */
+
+.pager, .stepper .steps { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; z-index: 30; }
+.pager {
+  width: min(760px, calc(100vw - 24px)); height: 64px; padding: 8px;
+  display: flex; align-items: center; justify-content: space-between; border-radius: 999px;
+}
+.pager button { width: 48px; height: 48px; min-height: 0; padding: 0; justify-content: center; border-radius: 50%; }
+.pager button.primary { background: var(--accent); color: var(--on-accent); }
+.pager-text, .step-status, .hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.stepper .steps {
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 8px); height: 48px; z-index: 31;
+  width: calc(min(760px, 100vw - 24px) - 132px);
+  display: flex; align-items: center; justify-content: space-around; gap: 2px;
+  list-style: none; margin: 0; padding: 4px; border-radius: 999px; box-shadow: none;
+}
+.stepper .steps::before { background: var(--glass-fill); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.stepper .steps::after { background: none; }
+.steps li { flex: 0 1 auto; min-width: 0; }
+.steps li[data-state="current"] { flex: 0 0 auto; }
+.steps a { height: 40px; min-height: 0; padding: 0 10px; border-radius: 999px; gap: 6px; border: 0; background: transparent; color: var(--muted); font-size: 0.875rem; justify-content: center; width: 100%; }
+.steps .mark { display: none; }
+.steps .num { font-weight: 700; font-variant-numeric: tabular-nums; }
+.steps .label { display: none; }
+.steps [data-state="current"] a { view-transition-name: glass-lens; color: var(--text); }
+.steps [data-state="current"] .label { display: inline; font-weight: 650; white-space: nowrap; }
+.steps [data-state="done"] .num { color: var(--text); }
+::view-transition-group(glass-lens) { animation-duration: 340ms; animation-timing-function: cubic-bezier(0.3, 1.3, 0.5, 1); }  /* un pelín de rebote: gota de agua */
+
+@media (hover: hover) and (pointer: fine) {
+  .steps a:hover { color: var(--text); background: var(--glass-fill); }
+  button:hover:not(:disabled) { border-color: var(--border); background-color: rgba(255, 255, 255, 0.7); }
+  button.primary:hover:not(:disabled) { background-color: var(--accent); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-color-scheme: dark) {
+  button:hover:not(:disabled) { background-color: rgba(255, 255, 255, 0.14); }
+}
+
+/* --------------------------------------------------------------- materializar al entrar:
+   el vidrio llega desenfocado y un poco más pequeño, y se asienta */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-entering] .masthead, [data-entering] .flow, [data-entering] .explain, [data-entering] .visual {
+    animation: glass-in 420ms var(--ease-out) both;
+  }
+  [data-entering] .flow { animation-delay: 40ms; }
+  [data-entering] .explain { animation-delay: 80ms; }
+  [data-entering] .visual { animation-delay: 120ms; }
+}
+@keyframes glass-in { from { opacity: 0; transform: scale(0.97); filter: blur(8px); } }
+
+/* --------------------------------------------------------------- accesibilidad del material */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-thin: var(--surface); --glass-regular: var(--surface); --glass-thick: var(--surface); }
+  .masthead::before, .flow::before, .explain::before, .visual::before, .pager::before, .stepper .steps::before, #banner .banner::before {
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  #banner .banner::before { background: var(--surface); }
+  .params button[aria-checked="true"], .steps [data-state="current"] a,
+  .can-refract .params button[aria-checked="true"], .can-refract .steps [data-state="current"] a {
+    -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--accent-soft);
+  }
+  .field { opacity: 0.35; }
+}
+@media (prefers-contrast: more) {
+  :root { --glass-thin: var(--surface); --glass-regular: var(--surface); --glass-thick: var(--surface); --border: var(--text); --muted: var(--text); }
+  .masthead::after, .flow::after, .explain::after, .visual::after, .pager::after { box-shadow: inset 0 0 0 1.5px var(--text); background: none; }
+}
+
+/* --------------------------------------------------------------- móvil */
+
+@media (max-width: 900px) {
+  .app { padding: 12px 12px 120px; }
+  .masthead { margin-top: 64px; padding: 16px; border-radius: 22px; }
+  .brand h1 { font-size: 1.3125rem; }
+  .controls { width: 100%; }
+  .params { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .params button { align-items: center; padding: 6px 4px; }
+  .param-prefix { display: none; }
+  .actions { width: 100%; }
+  .actions button { flex: 1; justify-content: center; }
+  .actions kbd { display: none; }
+  .flow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 6px; padding: 6px; border-radius: 20px; }
+  .party { padding: 8px 10px; border-radius: 14px; }
+  .party-role, .channel-name { display: none; }
+  .party-name { font-size: 0.9375rem; }
+  .wire { padding: 4px 8px; font-size: 0.75rem; white-space: nowrap; }
+  .step-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .explain { padding: 22px 20px; border-radius: 22px; }
+  .explain h2 { font-size: 1.375rem; }
+  .visual { padding: 16px; border-radius: 22px; min-height: 0; }
+  .pager { height: 60px; padding: 6px; }
+  .stepper .steps { width: calc(100vw - 24px - 120px); height: 44px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 8px); }
+  .steps a { padding: 0 6px; height: 36px; font-size: 0.8125rem; }
+  .steps li:not([data-state="current"]) .num { font-size: 0.75rem; }
+  .steps [data-state="current"] .label { display: none; }
+  .steps [data-state="current"] .num::after { content: " / 9"; font-weight: 500; color: var(--muted); }
+}
