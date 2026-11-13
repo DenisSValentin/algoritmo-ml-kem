@@ -3,9 +3,9 @@
 Sistema visual del visualizador de ML-KEM (`visualizer/`). Producto y público: `PRODUCT.md`.
 Crítica del diseño de partida: `docs/design-critique.md`.
 
-> **Estado (2026-11-13): en exploración, segunda ronda.** Hay tres direcciones construidas y
-> funcionando en `visualizer/static/prototypes/` (selector en local): Riel, Capa e Hilo. Lo que
-> Denis elige se apunta en «Decisiones de Denis» y se convierte en el diseño publicado. Hasta entonces
+> **Estado (2026-11-13): en exploración, tercera ronda.** Hay dos direcciones construidas y
+> funcionando en `visualizer/static/prototypes/` (selector en local): Riel y Capa. Lo que Denis
+> elige se apunta en «Decisiones de Denis» y se convierte en el diseño publicado. Hasta entonces
 > lo publicado sigue siendo `visualizer/static/{index.html,style.css,app.js}` sin cambios.
 > **Antes de mergear a `main`:** pasar el diseño elegido a esos ficheros y borrar
 > `visualizer/static/prototypes/`; si no, `pages.yml` la publicaría en `/prototypes/`.
@@ -15,6 +15,46 @@ Crítica del diseño de partida: `docs/design-critique.md`.
 **Lectura (Read).** Quien entra quiere *entender* ML-KEM. Manda la pregunta de cada paso; el
 diseño se queda con el marco (cabecera, navegación, cómo se ponen ecuaciones, tablas y figuras) y
 la columna de lectura se mantiene tranquila: letra de lectura, contraste real, 60–70 caracteres.
+
+## Reglas de Denis (gusto)
+
+Salen de sus correcciones al comparar los prototipos y él las aprobó (`learn-taste`). Mandan sobre
+cualquier preferencia del agente. Antes de cambiar la interfaz, léelas.
+
+### Composición
+- **Nunca un diseño de documento académico** (columna única en serif, índice como cabecera
+  corrida, figuras debajo del texto «Figura N») para esta app.
+  Por qué: *inferido y aceptado:* le quita la sensación de herramienta interactiva.
+  <!-- 2026-11-13: «el b no me gusta nada» (sobre Estándar) -->
+- **El progreso es siempre una línea del 1 al 9 con todos los pasos a la vista a la vez:**
+  tramo recorrido pintado, parada actual marcada, pasos pendientes visibles. Puede ir en
+  vertical u horizontal. Nunca un diseño en el que no se vea en qué paso estás ni cuántos quedan.
+  Por qué: sus palabras, «para que no te pierdas».
+  <!-- 2026-11-13: «me gusta mucho su avance para que no te pierdas … la linea que va desde el punto 1 al 9 en vertical, indicando donde estás»; luego «no hace falta que sea vertical»; sobre Hilo: «no sabes en que pasos estas ni cuales quedan» -->
+- **Lo que flota no tapa lo importante ni deja huecos:** una barra fija ocupa lo mínimo, y
+  entre la navegación y el contenido no quedan franjas vacías.
+  <!-- 2026-11-13: sobre Capa: «hay demasiados espacios libres … entre la guideline de los pasos 1 a 9 y el contenido» y «el selector de la parte superior … cubre por encima al contenido que importa de verdad» -->
+
+### Interacción
+- **Botones y selectores siempre con relieve, nunca planos:** cara con degradado, filo de luz
+  arriba, sombra con desplazamiento, y se hunden 1 px al pulsarlos (`cristal.css`). Vale para
+  los parámetros (512/768/1024), «Anterior»/«Siguiente» y el resto de botones.
+  Por qué: *inferido y aceptado:* que se note que se pueden pulsar.
+  <!-- 2026-11-13: «no me gustan los botones, son muy planos, tanto para cambiar de ML-KEM-512 al 768 como los de Anterior y Siguiente» -->
+- **En un selector segmentado, la opción elegida se desliza hasta la nueva; nunca salta.**
+  Por qué: *inferido y aceptado:* así se ve qué ha cambiado.
+  <!-- 2026-11-13: «me falta la animacion de transicion de uno a otro … se podria poner la animacion de deslizar» -->
+
+### Material (liquid glass)
+- **La luz del puntero es pequeña y solo en el filo del vidrio:** 100 px en el borde y 70 px de
+  brillo tenue dentro, como máximo.
+  <!-- 2026-11-13: «la luz brillante al rededor del raton es inmensamente grande»; con 150/110 px: «que sea un poco más pequeña» -->
+- **El vidrio deja ver poco:** opacidad del tinte ≥ 64 % (fino), 78 % (normal), 88 % (grueso).
+  <!-- 2026-11-13: «quizás podría ser un poco menos transparente» -->
+- **Detrás del vidrio, nada que se confunda con él:** los puntitos pequeños del retículo sí se
+  confundían. Un dibujo de fondo no está prohibido si se distingue bien del material (por
+  ejemplo, para diferenciar a Alice y Bob): hay que probarlo y que Denis lo vea.
+  <!-- 2026-11-13: «que el fondo tenga puntitos confunde con el liquid glass»; luego «quizas siendo ahora más opaco algun dibujo si encaje bien, para diferenciar a alice y bob» -->
 
 ## Lo común a cualquier dirección (decidido)
 
@@ -78,50 +118,43 @@ Tres direcciones construidas el 2026-11-13 (commit `9e2742f`, ya no están en el
 - **C · Vidrio:** liquid glass sobre un retículo de puntos. Se quedó el material; el brillo del
   ratón era enorme, los puntos del fondo se confundían con el vidrio y era demasiado transparente.
 
-## Segunda ronda: las tres direcciones en el selector
+## Segunda ronda (absorbida)
 
-Comparten el material de `prototypes/cristal.css` (vidrio, botones con relieve, fondo de color)
-y la línea vertical de pasos con la parada actual como gota de vidrio. Cambia **dónde vive la
-línea y qué es de vidrio**.
+- **Riel** (Línea + Vidrio): gustó; sigue en el selector.
+- **Capa** (vidrio solo en la navegación flotante, línea vertical flotando a la izquierda): gustó
+  la idea de elementos flotantes, pero sobraba hueco entre la línea y el contenido y la cabecera
+  fija tapaba el contenido. Rehecha en la ronda 3.
+- **Hilo** (la línea atraviesa el contenido): descartada; no se veía en qué paso estabas ni
+  cuántos quedaban.
 
-### Riel — eje: la línea en su columna (Línea + Vidrio)
+## Tercera ronda: las dos direcciones en el selector
 
-- **Idea:** el diseño A tal cual en estructura, pero con el material de C.
-- **Composición:** cabecera de vidrio arriba; la línea con nombres y quién actúa (Alice/Bob) en
-  una columna de vidrio fija a la izquierda; Alice/canal/Bob, texto y figura como láminas de
-  vidrio a la derecha. En tableta y móvil, la línea se tumba y queda fija arriba.
-- **Tipografía:** Overpass (señalética). Ecuaciones en placas oscuras de andén.
-- **Cuándo gana:** si lo que más te gustó de A fue la sensación de «mapa de línea».
+Comparten el material de `prototypes/cristal.css`: vidrio, botones con relieve, selector de
+parámetros que se desliza y fondo de color que dice quién actúa.
 
-### Capa — eje: el vidrio solo en la navegación (como iOS 26)
+### Riel — la línea vertical en su columna
+- Cabecera de vidrio arriba; la línea del 1 al 9 con nombres y quién actúa (Alice/Bob) en una
+  columna de vidrio fija a la izquierda; Alice/canal/Bob, texto y figura como láminas a la
+  derecha. En tableta y móvil la línea se tumba y queda fija arriba.
+- Overpass (señalética). Ecuaciones en placas oscuras de andén.
 
-- **Idea:** el contenido es opaco y tranquilo; lo único de vidrio es lo que flota encima: la
-  cabecera fija con los parámetros, la línea de pasos a la izquierda y los botones de avanzar
-  abajo a la derecha. Al desplazar, el texto y las figuras pasan por debajo del vidrio: eso es lo
-  que se ve refractado, nunca un dibujo de fondo.
-- **Composición:** la línea flota centrada a la izquierda (con nombres desde 1260 px; solo
-  números por debajo). En móvil la línea pasa a un dock abajo, entre «anterior» y «siguiente».
-- **Parámetros:** la opción elegida es una lente de vidrio que se desliza con un pequeño rebote.
-- **Tipografía:** la del sistema (SF en Apple).
-- **Cuándo gana:** si quieres el liquid glass más fiel a Apple y el texto más legible.
+### Capa — elementos flotantes, contenido a todo el ancho
+- Arriba, el título en la página y, flotando fija, **solo una píldora pequeña** con los
+  parámetros (lente de vidrio que se desliza con rebote), «Nueva ejecución» y «Manipular c».
+- Abajo, un **dock de vidrio con la línea horizontal** del 1 al 9 (nombres en pantallas anchas,
+  números en las estrechas) entre «anterior» y «siguiente».
+- El contenido es opaco y ocupa todo el ancho; lo único que pasa por debajo del vidrio al
+  desplazar es el propio contenido.
+- En móvil la píldora deja de flotar (se queda al principio) y el dock sigue abajo.
+- Letra del sistema (SF en Apple).
 
-### Hilo — eje: la línea atraviesa el contenido
-
-- **Idea:** la misma línea vertical, pero el paso actual se abre dentro de ella: arriba quedan
-  las paradas hechas (compactas, con marca de visto), luego la parada actual y su contenido
-  pegado a la línea, y debajo las que faltan.
-- **Composición:** una sola columna. Funciona igual en móvil, donde la línea se estrecha.
-- **Tipografía:** Atkinson Hyperlegible Next (diseñada para leer bien).
-- **Cuándo gana:** si quieres que el recorrido se lea de arriba abajo como una historia.
-
-### Común a las tres
-- **Botones con relieve:** cara con degradado, filo iluminado arriba, sombra con desplazamiento;
-  al pulsar se hunden 1 px. Lo elegido y lo principal, en el color de la línea con la misma luz.
-  «Manipular c» activo queda hundido, como un interruptor.
-- **Selector de parámetros:** pista hundida y la opción elegida sobresale; al cambiar de 512 a
-  768 o 1024, la pieza elegida **se desliza** (320 ms, ease-out; en Capa 380 ms con rebote).
-- **En oscuro, ninguna sombra de color** (el detector lo marca como halo de neón): las sombras
-  son negras.
+### Común
+- **Botones con relieve** y **selector de parámetros que se desliza** (ver Reglas de Denis).
+- **Alice y Bob se distinguen por el lado y el color:** cuando actúa Alice se ilumina en azul la
+  mitad izquierda del fondo (donde está Alice en el esquema) y cuando actúa Bob, en cálido la
+  derecha; además el vidrio entero se tiñe un poco de ese color (`--phase-tint`, 700 ms).
+- **En oscuro, ninguna sombra de color** (el detector lo marca como halo de neón).
+- **Cifras sin caja** dentro de las figuras: número y etiqueta separados por una regla fina.
 
 ## Liquid glass (solo en esta app)
 
@@ -139,10 +172,10 @@ iluminado arriba) y **se adapta** a lo que tiene detrás.
 |---|---|---|
 | Lámina | Tinte + desenfoque | `::before` con el tinte del grosor y `backdrop-filter: blur() saturate(1.6)` |
 | Filo | Luz que entra por arriba y se apaga abajo | `::after` de 1 px (máscara que solo deja el borde) con degradado vertical |
-| Luz del puntero | Reflejo pequeño de una sola luz | en el filo, un círculo de **150 px**; dentro de la lámina, otro de **110 px** muy tenue (14 % en claro, 6 % en oscuro). Fijos a la ventana, así todas las láminas reflejan la misma luz. Solo con ratón |
+| Luz del puntero | Reflejo pequeño de una sola luz | en el filo, un círculo de **100 px**; dentro de la lámina, otro de **70 px** muy tenue (35 % en claro, 6 % en oscuro). Fijos a la ventana, así todas las láminas reflejan la misma luz. Solo con ratón |
 | Refracción | La gota dobla lo de detrás | `backdrop-filter: url(#lg-refract)` (`feDisplacementMap`). Solo en Chromium; Safari y Firefox, desenfoque y brillo |
 | Profundidad | Flota | sombra exterior suave con desplazamiento (`--glass-shadow`) |
-| Adaptación | Se tiñe con quien actúa | Riel e Hilo: manchas de color de fondo, frías con Alice y cálidas con Bob (700 ms). Capa: lo que pasa por debajo es el propio contenido |
+| Adaptación | Se tiñe con quien actúa | fondo azul a la izquierda con Alice y cálido a la derecha con Bob, y el tinte del vidrio se mezcla con ese color (`--phase-tint`); 700 ms |
 
 El vidrio va en el **pseudo-elemento**, no en el elemento: así el elemento no es «raíz de fondo» y
 la gota que lleva dentro refracta la página de detrás y no solo el tinte de su lámina.
@@ -150,16 +183,17 @@ la gota que lleva dentro refracta la página de detrás y no solo el tinte de su
 ### Grosores (los únicos tres)
 | Grosor | Uso | Claro | Oscuro | Desenfoque |
 |---|---|---|---|---|
-| Fino | cabecera, línea, Alice/canal/Bob | blanco 64 % | `#1a1f2e` 68 % | 16 px |
-| Normal | figuras; en Capa, toda la navegación | blanco 78 % | `#141825` 80 % | 24 px |
+| Fino | Riel: cabecera, línea, Alice/canal/Bob | blanco 64 % | `#1a1f2e` 68 % | 16 px |
+| Normal | Riel: figuras. Capa: píldora y dock | blanco 78 % | `#141825` 80 % | 24 px |
 | Grueso | texto que se lee | blanco 88 % | `#10131e` 88 % | 30 px |
 
 Ronda 1 usaba 42 / 58 / 76 %: era demasiado transparente. Controles dentro del vidrio: relleno
 translúcido **sin** desenfoque propio (vidrio sobre vidrio destroza la legibilidad).
 
 ### Reglas
-- **Detrás del vidrio, nunca un dibujo** (puntos, rejillas, líneas): se confunde con el propio
-  material. Solo color suave o el contenido real.
+- **Detrás del vidrio, nada que se confunda con él** (los puntitos de la ronda 1 sí se
+  confundían). Ahora solo hay color; un dibujo que se distinga bien está permitido si Denis lo
+  aprueba al verlo.
 - **Contraste:** medido con el peor fondo debajo (mancha de color más oscura y vidrio fino):
   texto ≥ 13,8:1, secundario ≥ 6,3:1, verde de «correcto» 4,5:1.
 - **`prefers-reduced-transparency`:** láminas opacas (`--surface`), sin desenfoque ni refracción.
@@ -169,7 +203,7 @@ translúcido **sin** desenfoque propio (vidrio sobre vidrio destroza la legibili
 - **Rendimiento:** el fondo no se dibuja en un lienzo: son degradados de CSS que solo se desplazan
   con `translate` al cambiar de paso. El retículo 3D del paso 2 va **encima** del vidrio, así que
   girarlo no obliga a recalcular ningún desenfoque. Lo caro es desplazar la página (cada lámina
-  vuelve a desenfocar lo de detrás): Riel tiene 5 láminas, Capa 3 e Hilo 4.
+  vuelve a desenfocar lo de detrás): Riel tiene 5 láminas y Capa 2.
 - **Pendiente de comprobar en hardware real:** fluidez al desplazar en un iPhone y en un portátil
   con gráfica integrada (la pestaña de pruebas de estas sesiones estaba en segundo plano y no daba
   tiempos de fotograma fiables).
@@ -189,4 +223,17 @@ Ronda 1 (2026-11-13), con sus palabras:
 - **Cambio de parámetros animado:** «al pasar de ml-kem-512, a 768 o a 1024 me falta la animacion
   de transicion … se podria poner la animacion de deslizar».
 
-Ronda 2: pendiente de que compare Riel, Capa e Hilo.
+Ronda 2 (2026-11-13), con sus palabras:
+
+- **Riel:** «me gusta A bastante».
+- **Capa:** «me gusta la idea de elementos flotantes pero está muy mal ejecutada. hay demasiados
+  espacios libres … entre la guideline de los pasos 1 a 9 y el contenido. Además, si scrolleas
+  hacia abajo el selector de la parte superior de 512,768 etc cubre por encima al contenido que
+  importa de verdad. Prueba a que la guideline sea horizontal en lugar de vertical y que esté
+  abajo, ensanchando asi el espacio para el contenido. quizás dejando los selectores 512, 768 etc
+  fijos arriba».
+- **Hilo, descartado:** «no sabes en que pasos estas ni cuales quedan, no se ve bien».
+- **Luz del puntero:** con 150/110 px, «que sea un poco más pequeña».
+- **Alice y Bob en el fondo:** «me gusta la idea, pero no se diferencian bien».
+
+Ronda 3: pendiente de que compare Riel y la nueva Capa.

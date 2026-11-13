@@ -7,11 +7,10 @@
 // Única desviación del contrato de PICKER.md: la app ya usa 1 2 3 y ← → (parámetros y pasos),
 // así que el selector responde a Mayús + 1/2/3, Mayús + ←/→ y Mayús + R.
 
-const VARIANTS = ["riel", "capa", "hilo"];
+const VARIANTS = ["riel", "capa"];
 const THEME_COLOR = {
   riel: { light: "#eef1f6", dark: "#0a0d14" },
-  capa: { light: "#f4f5f8", dark: "#0b0d12" },
-  hilo: { light: "#eef1f6", dark: "#0a0d14" },
+  capa: { light: "#eef1f6", dark: "#0a0d14" },
 };
 
 const root = document.documentElement;
@@ -73,13 +72,14 @@ replay?.addEventListener("click", mount);
 window.addEventListener("resize", moveHighlight);
 darkScheme.addEventListener("change", syncThemeColor);
 
-// Capa en móvil lleva los pasos en un dock abajo: ahí el selector sube
-const narrow = window.matchMedia("(max-width: 900px)");
+// Capa lleva los pasos en un dock abajo: ahí el selector sube, y --proto-top baja la píldora
+// fija de Capa para que no la tape (en el diseño real no existe)
 function placePicker() {
-  if (VARIANTS[current] === "capa" && narrow.matches) picker.setAttribute("data-position", "top");
-  else picker.removeAttribute("data-position");
+  const top = VARIANTS[current] === "capa";
+  picker.toggleAttribute("data-position", top);
+  if (top) picker.setAttribute("data-position", "top");
+  root.style.setProperty("--proto-top", top ? "60px" : "0px");
 }
-narrow.addEventListener("change", placePicker);
 
 document.addEventListener("keydown", (e) => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;

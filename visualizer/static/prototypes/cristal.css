@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CRISTAL — material común de la segunda ronda (Riel, Capa, Hilo).
+   CRISTAL — material común de Riel y Capa.
    Lo que pidió Denis tras la primera ronda:
    - el vidrio de Vidrio sí, pero menos transparente y sin puntitos detrás que se confundan
      con él: el fondo es solo color suave;
@@ -66,12 +66,15 @@
   --track-shadow: inset 0 1px 3px rgba(15, 25, 50, 0.14), inset 0 0 0 1px rgba(15, 25, 50, 0.06);
 
   /* Fondo: manchas de color, nada de dibujo */
-  --glow-none-1: rgba(122, 92, 240, 0.30);
-  --glow-none-2: rgba(40, 160, 255, 0.22);
-  --glow-alice-1: rgba(30, 120, 255, 0.32);
-  --glow-alice-2: rgba(0, 190, 200, 0.22);
-  --glow-bob-1: rgba(255, 140, 50, 0.30);
-  --glow-bob-2: rgba(255, 80, 130, 0.20);
+  /* Alice, fría y a la izquierda (donde está en el esquema); Bob, cálido y a la derecha */
+  --glow-none-1: rgba(122, 92, 240, 0.20);
+  --glow-none-2: rgba(122, 92, 240, 0.12);
+  --glow-alice-1: rgba(0, 120, 255, 0.55);
+  --glow-alice-2: rgba(0, 200, 210, 0.42);
+  --glow-bob-1: rgba(255, 120, 30, 0.55);
+  --glow-bob-2: rgba(255, 60, 110, 0.38);
+  --tint-alice: rgba(0, 120, 230, 0.07);
+  --tint-bob: rgba(255, 110, 40, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -120,12 +123,14 @@
     --track: rgba(0, 0, 0, 0.28);
     --track-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 
-    --glow-none-1: rgba(110, 70, 255, 0.30);
-    --glow-none-2: rgba(0, 130, 255, 0.18);
-    --glow-alice-1: rgba(0, 110, 255, 0.32);
-    --glow-alice-2: rgba(0, 180, 190, 0.18);
-    --glow-bob-1: rgba(255, 120, 30, 0.26);
-    --glow-bob-2: rgba(255, 50, 110, 0.18);
+    --glow-none-1: rgba(110, 70, 255, 0.22);
+    --glow-none-2: rgba(110, 70, 255, 0.12);
+    --glow-alice-1: rgba(0, 110, 255, 0.50);
+    --glow-alice-2: rgba(0, 190, 200, 0.32);
+    --glow-bob-1: rgba(255, 110, 20, 0.44);
+    --glow-bob-2: rgba(255, 50, 110, 0.30);
+    --tint-alice: rgba(40, 150, 255, 0.10);
+    --tint-bob: rgba(255, 130, 50, 0.09);
   }
 }
 
@@ -140,22 +145,30 @@ body { font-weight: 450; letter-spacing: 0.003em; }
 .field-glow, .field-glow::before, .field-glow::after { position: absolute; inset: 0; content: ""; transition: opacity 700ms ease-out; }
 .field-glow {
   background:
-    radial-gradient(42% 40% at 74% 26%, var(--glow-none-1), transparent 70%),
-    radial-gradient(38% 44% at 20% 76%, var(--glow-none-2), transparent 70%);
+    radial-gradient(50% 45% at 50% 20%, var(--glow-none-1), transparent 70%),
+    radial-gradient(45% 45% at 50% 90%, var(--glow-none-2), transparent 70%);
 }
+/* Alice ocupa la mitad izquierda; Bob, la derecha. El lado que se ilumina dice quién actúa */
 .field-glow::before {
   opacity: 0;
   background:
-    radial-gradient(44% 42% at 24% 28%, var(--glow-alice-1), transparent 70%),
-    radial-gradient(40% 46% at 72% 80%, var(--glow-alice-2), transparent 70%);
+    radial-gradient(60% 80% at 8% 45%, var(--glow-alice-1), transparent 72%),
+    radial-gradient(45% 50% at 22% 100%, var(--glow-alice-2), transparent 70%);
 }
 .field-glow::after {
   opacity: 0;
   background:
-    radial-gradient(44% 42% at 78% 24%, var(--glow-bob-1), transparent 70%),
-    radial-gradient(40% 46% at 26% 82%, var(--glow-bob-2), transparent 70%);
+    radial-gradient(60% 80% at 92% 45%, var(--glow-bob-1), transparent 72%),
+    radial-gradient(45% 50% at 78% 100%, var(--glow-bob-2), transparent 70%);
 }
 [data-phase="alice"] .field-glow::before, [data-phase="bob"] .field-glow::after { opacity: 1; }
+[data-phase="alice"] .field-glow, [data-phase="bob"] .field-glow { background-size: 0 0; }
+
+/* Y el propio vidrio se tiñe un poco del color de quien actúa (transición suave del color) */
+@property --phase-tint { syntax: "<color>"; inherits: true; initial-value: transparent; }
+:root { --phase-tint: transparent; transition: --phase-tint 700ms ease-out; }
+[data-phase="alice"] { --phase-tint: var(--tint-alice); }
+[data-phase="bob"] { --phase-tint: var(--tint-bob); }
 @media (prefers-reduced-motion: no-preference) {
   .field { transition: translate 900ms var(--ease-out); }
 }
@@ -217,4 +230,11 @@ kbd {
 button.primary kbd { background: transparent; }
 
 /* La receta de vidrio (lámina en ::before; filo y luz del puntero en ::after) se repite en
-   cada variante con su lista de superficies: ver riel.css, capa.css e hilo.css. */
+   cada variante con su lista de superficies: ver riel.css y capa.css. */
+
+/* Las cifras de cada figura van sin caja (una caja dentro de la lámina sería una tarjeta dentro
+   de otra): número grande y etiqueta, separados por una regla fina */
+.stat-row { gap: 0; }
+.stat { background: none !important; box-shadow: none !important; border-radius: 0; padding: 4px 20px 4px 0; margin-right: 20px; border-right: 1px solid var(--border); min-width: 0; }
+.stat:last-child { border-right: 0; margin-right: 0; }
+.stat b { font-size: 1.25rem; }
