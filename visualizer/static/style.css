@@ -136,12 +136,26 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .channel { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; position: relative; }
 .channel-name { font-size: 0.75rem; color: var(--muted); }
 .wire { position: relative; display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; color: var(--muted); container-type: inline-size; }
-.wire[data-dir="rtl"] { flex-direction: row-reverse; justify-content: flex-end; }
+.wire { justify-content: center; }   /* «ek · 1184 B» y «c · 1088 B» centrados bajo «canal público» */
+.wire[data-dir="rtl"] { flex-direction: row-reverse; justify-content: center; }
 .wire-label b { font-family: var(--font-data); }
 .wire-track { position: absolute; inset: 0; pointer-events: none; }
 .wire-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; border-radius: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
 .wire[data-dir="rtl"] .wire-track::after { transform-origin: right; }
 .wire.tampered .wire-track::after { background: var(--bad); }
+
+/* Punta de flecha en cada línea: siempre dice hacia dónde va (gris si la línea no está activa).
+   Se coloca con transform; 100cqi es el ancho de la línea. La punta sobresale 4 px del final
+   para que el extremo de la línea (4 px de grosor) quede dentro del triángulo y no asome */
+.wire-track::before {
+  content: ""; position: absolute; z-index: 1; left: 0; bottom: -9px; width: 12px; height: 14px;
+  background: var(--line-off);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  transform: translateX(calc(100cqi - 8px));
+}
+.wire[data-dir="rtl"] .wire-track::before { clip-path: polygon(100% 0, 0 50%, 100% 100%); transform: translateX(-4px); }
+.wire.active .wire-track::before { background: var(--accent); }
+.wire.tampered .wire-track::before { background: var(--bad); }
 .tamper-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--bad); font-size: 0.75rem; font-weight: 600; }
 
 /* Enviar: la primera vez que se llega a un paso donde viaja ek o c, la línea se dibuja desde
@@ -150,9 +164,14 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 @media (prefers-reduced-motion: no-preference) {
   .wire.travel .wire-track { border-bottom-style: dashed !important; border-bottom-color: var(--line-off) !important; }
   .wire.travel .wire-track::after { animation: send 700ms var(--ease-in-out) 120ms forwards; }
+  /* la flecha va en la punta de la línea mientras se dibuja, y se queda en quien recibe */
+  .wire.travel .wire-track::before { animation: head-ltr 700ms var(--ease-in-out) 120ms backwards; }
+  .wire.travel[data-dir="rtl"] .wire-track::before { animation-name: head-rtl; }
   .party.receiving { animation: receive 560ms var(--ease-out) 800ms forwards; }   /* nada hasta que llega la línea */
 }
 @keyframes send { to { transform: scaleX(1); } }
+@keyframes head-ltr { from { transform: translateX(-4px); } }
+@keyframes head-rtl { from { transform: translateX(calc(100cqi - 8px)); } }
 @keyframes receive {
   from { outline: 2px solid var(--accent); outline-offset: 0; }
   to { outline: 2px solid transparent; outline-offset: 10px; }
@@ -661,17 +680,21 @@ body { font-weight: 400; letter-spacing: 0; }
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 1.5fr) minmax(0, 1fr);
   align-items: center; gap: 8px; padding: 10px; margin-bottom: 18px;
 }
+.flow > .party { align-self: stretch; }   /* las tarjetas ocupan todo el alto de la fila */
 .party { padding: 10px 14px; border-radius: 16px; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
 /* El rol y el secreto van seguidos en un solo párrafo: si el rol se parte, el secreto
    continúa en la misma línea en vez de dejar un hueco a la derecha */
-.party { display: block; line-height: 1.4; }
-.party-name { display: block; margin-bottom: 2px; }
+.party { display: flex; flex-direction: column; line-height: 1.4; }
+.party-name { display: block; }
+/* lo que hace queda centrado en el alto que sobra bajo el nombre */
+.party-info { display: block; margin-block: auto; padding-top: 4px; }
 .party-role, .party-secret { display: inline; }
 .party-secret::before { content: " · "; font-family: var(--font-ui); color: var(--muted); }
 .party-bob { text-align: right; align-items: flex-end; }
 .party-name { font: 800 1.0625rem/1.2 var(--font-display); }
 /* el papel va junto al nombre: así debajo solo queda qué hace, y entra en dos líneas */
 .party-tag { margin-left: 8px; font: 500 0.8125rem var(--font-ui); color: var(--muted); }
+.party-bob .party-tag { margin: 0 8px 0 0; }
 .party.active .party-tag { color: var(--accent); }
 .party.active { background: var(--glass-fill); box-shadow: inset 0 0 0 2px var(--accent), 0 4px 14px -6px var(--accent-shadow); }
 .party.active .party-name { color: var(--accent); }

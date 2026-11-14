@@ -1324,16 +1324,19 @@ function renderFlow(d) {
   const receiver = travel ? (f.ek ? "bob" : f.c ? "alice" : null) : null;
   $("flow").replaceChildren(
     h("div", { class: `party party-alice ${f.alice ? "active" : ""} ${receiver === "alice" ? "receiving" : ""}` },
-      h("span", { class: "party-name" }, "Alice", h("span", { class: "party-tag" }, "receptora")), h("span", { class: "party-role" }, "KeyGen y Decaps"),
-      h("span", { class: "party-secret" }, state.step >= 6 ? `K′ = ${short(dc.K_final, 8)}` : "guarda dk en secreto")),
+      h("span", { class: "party-name" }, "Alice", h("span", { class: "party-tag" }, "receptora")),
+      h("span", { class: "party-info" }, h("span", { class: "party-role" }, "KeyGen y Decaps"),
+        h("span", { class: "party-secret" }, state.step >= 6 ? `K′ = ${short(dc.K_final, 8)}` : "guarda dk en secreto"))),
     h("div", { class: "channel", "aria-label": "Canal público" },
       h("span", { class: "channel-name" }, "canal público"),
       wire("ek", d.params.ek_size, "ltr", f.ek),
       wire("c", d.params.ciphertext_size, "rtl", f.c, state.tamper ? "tampered" : ""),
       state.tamper ? h("span", { class: "tamper-tag" }, icon("bolt", 14), "c manipulado") : null),
     h("div", { class: `party party-bob ${f.bob ? "active" : ""} ${receiver === "bob" ? "receiving" : ""}` },
-      h("span", { class: "party-name" }, "Bob", h("span", { class: "party-tag" }, "emisor")), h("span", { class: "party-role" }, "Encaps"),
-      h("span", { class: "party-secret" }, state.step >= 4 ? `K = ${short(d.encaps.K, 8)}` : "recibe ek")),
+      // en Bob, el papel va a la izquierda del nombre: simétrico con Alice
+      h("span", { class: "party-name" }, h("span", { class: "party-tag" }, "emisor"), "Bob"),
+      h("span", { class: "party-info" }, h("span", { class: "party-role" }, "Encaps"),
+        h("span", { class: "party-secret" }, state.step >= 4 ? `K = ${short(d.encaps.K, 8)}` : "recibe ek"))),
   );
 }
 
