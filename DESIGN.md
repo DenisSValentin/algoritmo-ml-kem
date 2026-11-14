@@ -167,8 +167,11 @@ secundario ≥ 6,3:1, texto sobre el acento ≥ 7,4:1, verde «correcto» ≥ 4,
 - **Láminas de vidrio**: ver «Liquid glass».
 - **Ecuaciones** (`.formula`): placa oscura `--plate` con Overpass Mono, como un cartel de andén.
 - **Cifras de las figuras** (`.stat`): sin caja; número y etiqueta separados por una regla fina.
-- **Alice · canal · Bob** (`.flow`): la parte que actúa lleva anillo del acento; `ek` y `c`
-  cruzan el canal como una ficha la primera vez que se llega a un paso donde viajan.
+- **Alice · canal · Bob** (`.flow`): el papel («receptora», «emisor») va junto al nombre y
+  debajo solo qué hace, para que entre en dos líneas. La parte que actúa lleva anillo del acento.
+  **Enviar:** la primera vez que se llega a un paso donde viaja `ek` o `c`, su línea se dibuja
+  desde quien envía hasta quien recibe (700 ms; lo que falta sigue gris y discontinuo) y, al
+  llegar, la tarjeta de quien recibe hace una onda que se abre y se desvanece. Sin bola encima.
 
 ## Cómo se llegó aquí (prototipos)
 

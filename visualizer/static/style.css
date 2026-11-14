@@ -139,26 +139,23 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .wire[data-dir="rtl"] { flex-direction: row-reverse; justify-content: flex-end; }
 .wire-label b { font-family: var(--font-data); }
 .wire-track { position: absolute; inset: 0; pointer-events: none; }
-.token { position: absolute; top: 50%; left: 0; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--accent); opacity: 0; }
-.wire[data-dir="rtl"] .token { left: auto; right: 0; }
+.wire-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; border-radius: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
+.wire[data-dir="rtl"] .wire-track::after { transform-origin: right; }
+.wire.tampered .wire-track::after { background: var(--bad); }
 .tamper-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--bad); font-size: 0.75rem; font-weight: 600; }
 
-/* La ficha cruza el canal una vez al llegar a un paso en el que viaja ek o c */
+/* Enviar: la primera vez que se llega a un paso donde viaja ek o c, la línea se dibuja desde
+   quien envía hasta quien recibe (lo que falta sigue gris y discontinuo) y, al llegar, la
+   tarjeta de quien recibe hace una onda. Con movimiento reducido, la línea aparece entera */
 @media (prefers-reduced-motion: no-preference) {
-  .wire.travel .token { animation: token-ltr 900ms var(--ease-in-out) 120ms both; }
-  .wire.travel[data-dir="rtl"] .token { animation-name: token-rtl; }
+  .wire.travel .wire-track { border-bottom-style: dashed !important; border-bottom-color: var(--line-off) !important; }
+  .wire.travel .wire-track::after { animation: send 700ms var(--ease-in-out) 120ms forwards; }
+  .party.receiving { animation: receive 560ms var(--ease-out) 800ms forwards; }   /* nada hasta que llega la línea */
 }
-@keyframes token-ltr {
-  0% { opacity: 0; transform: translateX(0); }
-  12% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(calc(100cqi - 10px)); }
-}
-@keyframes token-rtl {
-  0% { opacity: 0; transform: translateX(0); }
-  12% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(calc(-100cqi + 10px)); }
+@keyframes send { to { transform: scaleX(1); } }
+@keyframes receive {
+  from { outline: 2px solid var(--accent); outline-offset: 0; }
+  to { outline: 2px solid transparent; outline-offset: 10px; }
 }
 
 /* --------------------------------------------------------------- estado: banner, carga, error */
@@ -673,6 +670,9 @@ body { font-weight: 400; letter-spacing: 0; }
 .party-secret::before { content: " · "; font-family: var(--font-ui); color: var(--muted); }
 .party-bob { text-align: right; align-items: flex-end; }
 .party-name { font: 800 1.0625rem/1.2 var(--font-display); }
+/* el papel va junto al nombre: así debajo solo queda qué hace, y entra en dos líneas */
+.party-tag { margin-left: 8px; font: 500 0.8125rem var(--font-ui); color: var(--muted); }
+.party.active .party-tag { color: var(--accent); }
 .party.active { background: var(--glass-fill); box-shadow: inset 0 0 0 2px var(--accent), 0 4px 14px -6px var(--accent-shadow); }
 .party.active .party-name { color: var(--accent); }
 .channel { padding: 4px 8px; gap: 10px; }
@@ -683,8 +683,6 @@ body { font-weight: 400; letter-spacing: 0; }
 .wire.tampered .wire-track { border-bottom-color: var(--bad); }
 .wire.active { color: var(--text); }
 .wire.tampered { color: var(--bad); }
-.token { top: auto; bottom: -6px; margin: 0; width: 16px; height: 16px; background: radial-gradient(circle at 35% 30%, #fff, var(--accent) 70%); box-shadow: 0 2px 6px var(--accent-shadow); }
-.wire.tampered .token { background: radial-gradient(circle at 35% 30%, #fff, var(--bad) 70%); }
 .tamper-tag { justify-content: center; }
 /* Aviso de manipulación: anclado arriba y por encima de todo, como el dock abajo, para que
    no se olvide que el texto cifrado está manipulado */
@@ -821,7 +819,7 @@ body { font-weight: 400; letter-spacing: 0; }
   /* Alice y Bob ocupan lo que su nombre, y el nombre va centrado en su cápsula */
   .flow { grid-template-columns: auto minmax(0, 1fr) auto; padding: 6px; gap: 6px; margin-bottom: 14px; }
   .party, .party-bob { padding: 8px 12px; align-items: center; text-align: center; }
-  .party-role, .channel-name { display: none; }
+  .party-role, .party-tag, .channel-name { display: none; }
   .party-name { font-size: 0.9375rem; }
   .wire { font-size: 0.75rem; white-space: nowrap; }
   .step-grid { gap: 14px; }
