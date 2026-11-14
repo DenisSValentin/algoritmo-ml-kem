@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "algoritmo-ml-kem"
 version = "2.0.0"
 description = "Implementación educativa en Python de ML-KEM (FIPS 203) con visualizador interactivo"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Denis Valentin Stoyanov D'Antonio" }]
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26"]
