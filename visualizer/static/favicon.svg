@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- El canal del visualizador: ek viaja hacia Bob (arriba) y c vuelve hacia Alice (abajo).
+       Cada punta lleva el color de quien recibe: Bob cálido, Alice fría. -->
+  <rect width="32" height="32" rx="8" fill="#5432d3"/>
+  <g fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 11.5h16" stroke="#fff"/>
+    <path d="M19 7l4.5 4.5L19 16" stroke="#ffa25c"/>
+    <path d="M25 20.5H9" stroke="#fff"/>
+    <path d="M13 16l-4.5 4.5L13 25" stroke="#6cc4ff"/>
+  </g>
+</svg>

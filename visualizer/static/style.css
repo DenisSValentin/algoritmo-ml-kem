@@ -340,10 +340,6 @@ table.compare.plain th, table.compare.plain td { text-align: left; white-space: 
 @media (max-width: 900px) {
   .keys { grid-template-columns: 1fr; }
 }
-/* En el móvil la columna de Alice y Bob es tan estrecha que el secreto se partía letra a letra */
-@media (max-width: 640px) {
-  .party-secret { display: none; }
-}
 
 /* ==========================================================================
    MATERIAL — vidrio, botones con relieve y fondo de color.
@@ -843,8 +839,10 @@ body { font-weight: 400; letter-spacing: 0; }
   .actions kbd { display: none; }
   /* Alice y Bob ocupan lo que su nombre, y el nombre va centrado en su cápsula */
   .flow { grid-template-columns: auto minmax(0, 1fr) auto; padding: 6px; gap: 6px; margin-bottom: 14px; }
-  .party, .party-bob { padding: 8px 12px; align-items: center; text-align: center; }
-  .party-role, .party-tag, .channel-name { display: none; }
+  .party, .party-bob { padding: 8px 12px; align-items: center; justify-content: center; text-align: center; }
+  /* sin lo que hace ni el secreto: en una columna tan estrecha el hash se partía y la tarjeta
+     tapaba el canal. Va aquí, después de `.party-info`, para que no lo pise el orden del archivo */
+  .party-info, .party-tag, .channel-name { display: none; }
   .party-name { font-size: 0.9375rem; }
   .wire { font-size: 0.75rem; white-space: nowrap; }
   .step-grid { gap: 14px; }
