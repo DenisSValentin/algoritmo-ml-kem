@@ -12,6 +12,20 @@
   <em>An educational Python implementation of the post-quantum key-exchange standard, with an interactive visualizer</em>
 </p>
 
+<p align="center">
+  <a href="https://denissvalentin.github.io/algoritmo-ml-kem/">
+    <img src="https://img.shields.io/badge/%E2%96%B6%20Try%20it%20online-no%20install%20needed-8B5CF6?style=for-the-badge" alt="Try it online — no install needed">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://denissvalentin.github.io/algoritmo-ml-kem/#paso-4">
+    <img src="docs/images/visualizer-keygen.jpg" alt="The visualizer at the KeyGen step: the matrix A, the secret s, the error e and the public key t drawn as heatmaps" width="900">
+  </a>
+  <br>
+  <sub>The real ML-KEM code running in the browser: Alice's key generation, t = A·s + e, from an actual run.</sub>
+</p>
+
 ---
 
 ## What is this?
@@ -114,7 +128,20 @@ The deterministic algorithms from the standard (`keygen_internal`, `encaps_inter
 
 ### Visualizer
 
-**Online:** <https://denissvalentin.github.io/algoritmo-ml-kem/>
+**Online:** <https://denissvalentin.github.io/algoritmo-ml-kem/> — open it and press `→`; nothing to install.
+
+<table>
+  <tr>
+    <td width="33%"><a href="https://denissvalentin.github.io/algoritmo-ml-kem/#paso-1"><img src="docs/images/visualizer-idea.jpg" alt="Step 1: Alice and Bob exchange ek and c over the public channel and end up with the same key"></a></td>
+    <td width="33%"><a href="https://denissvalentin.github.io/algoritmo-ml-kem/#paso-2"><img src="docs/images/visualizer-lattice.jpg" alt="Step 2: a toy 2D lattice where you look for the closest point to the star"></a></td>
+    <td width="33%"><a href="https://denissvalentin.github.io/algoritmo-ml-kem/#paso-7"><img src="docs/images/visualizer-decaps.jpg" alt="Step 7: the 256 coefficients on the Z_q clock after removing the mask, split into bit 0 and bit 1"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>1 · The idea</b>: both keys match</sub></td>
+    <td align="center"><sub><b>2 · Lattices</b>: find the closest point</sub></td>
+    <td align="center"><sub><b>7 · Decaps</b>: the mask comes off</sub></td>
+  </tr>
+</table>
 
 It is a static page: the real `mlkem/` code runs inside your browser with [Pyodide](https://pyodide.org) (Python and NumPy compiled to WebAssembly), so nothing is sent to a server. The first visit downloads about 10 MB and takes a few seconds; after that the browser caches it. A GitHub Actions workflow ([`pages.yml`](.github/workflows/pages.yml)) publishes `visualizer/static/` together with the Python files on every push to `main`.
 
@@ -126,10 +153,10 @@ uv run ml-kem-visualizer
 
 It opens `http://127.0.0.1:8000` (`--port` and `--no-browser` are available). The local server only serves the files; the page works exactly as online, Pyodide included, so it needs an internet connection the first time.
 
-Both show a nine-step walkthrough (in Spanish):
+Both show a nine-step walkthrough (in Spanish). A strip at the top shows Alice, Bob and the public channel, and lights up what travels in each step:
 
 1. **The idea** — what a KEM does, with the result of a real run.
-2. **Lattices** — a 2D lattice where you try to find the closest point, and see what happens when the noise grows.
+2. **Lattices** — a 2D lattice where you try to find the closest point, and see what happens when the noise grows; switch to 3D to see why looking stops working.
 3. **The ring R_q** — the Z_q "clock", multiplication with X²⁵⁶ = −1, small vs. uniform polynomials.
 4. **KeyGen** — the k×k matrix A, the secret s and the error e as heatmaps, and t = A·s + e.
 5. **Encaps** — how the 256-bit message is hidden inside v.
@@ -176,7 +203,8 @@ algoritmo-ml-kem/
 ├── benchmarks/         # Timing script
 ├── docs/
 │   ├── concepts.md     # The maths, step by step (Spanish)
-│   └── review.md       # Errata for the 2024 thesis code (Spanish)
+│   ├── review.md       # Errata for the 2024 thesis code (Spanish)
+│   └── images/         # Screenshots of the visualizer used in this README
 ├── legacy/             # Original 2024 code
 └── Memoria_TFG_Denis_Stoyanov.pdf
 ```
