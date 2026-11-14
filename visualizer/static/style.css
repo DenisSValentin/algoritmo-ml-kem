@@ -715,12 +715,12 @@ body { font-weight: 400; letter-spacing: 0; }
 .steps .bead {
   position: absolute; z-index: 2; left: 50%; top: 4px; translate: -50% 0;
   width: 26px; height: 26px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2) 60%, transparent 61%), var(--glass-fill);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2) 60%, transparent 61%), linear-gradient(var(--glass-fill), var(--glass-fill)), var(--surface);
   box-shadow: inset 0 0 0 3px var(--accent), 0 4px 10px -2px var(--accent-shadow);
-  -webkit-backdrop-filter: blur(2px) saturate(1.8); backdrop-filter: blur(2px) saturate(1.8);
+  /* sin backdrop-filter: el filtro trabaja sobre un cuadrado y, al llegar la gota a su sitio,
+     se veían sus cuatro esquinas. El aspecto de cristal lo dan el brillo y el anillo */
   view-transition-name: station-flag;
 }
-.can-refract .steps .bead { backdrop-filter: url(#lg-refract) blur(1px) saturate(1.8); }
 .steps .num { display: none; }
 .steps .label { font-size: 0.8125rem; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .steps [data-state="current"] a { color: var(--text); }
@@ -797,7 +797,6 @@ body { font-weight: 400; letter-spacing: 0; }
 
 @media (prefers-reduced-transparency: reduce) {
   .masthead::before, .flow::before, .explain::before, .visual::before, .pager::before { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .lens, .can-refract .lens { -webkit-backdrop-filter: none; backdrop-filter: none; }
   .field { opacity: 0.4; }
 }
 @media (prefers-contrast: more) {

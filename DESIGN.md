@@ -46,6 +46,10 @@ cualquier preferencia del agente. Antes de cambiar la interfaz, léelas.
 - **La luz del puntero es pequeña y solo en el filo del vidrio:** 100 px en el borde y 70 px de
   brillo tenue dentro, como máximo.
   <!-- 2026-11-13: «la luz brillante al rededor del raton es inmensamente grande»; con 150/110 px: «que sea un poco más pequeña» -->
+- **En la animación solo se ve lo que se mueve:** ni esquinas, ni rayas, ni restos alrededor.
+  Nada de `backdrop-filter` en piezas pequeñas que se deslizan, y cada animación se comprueba
+  fotograma a fotograma (a mitad y al llegar), no solo el antes y el después.
+  <!-- 2026-11-14: «yo quiero que solo se vea la bola, que no haya nada más alrededor» (salían las esquinas del filtro); antes, «aparece una rayita horizontal» -->
 - **El vidrio deja ver poco:** opacidad del tinte ≥ 64 % (fino), 78 % (normal), 88 % (grueso).
   <!-- 2026-11-13: «quizás podría ser un poco menos transparente» -->
 - **Detrás del vidrio, nada que se confunda con él:** los puntitos pequeños del retículo sí se
@@ -177,8 +181,7 @@ define (`apple-design` solo cubre materiales translúcidos en general), así que
 definición, corregida tras la primera ronda.
 
 ### Qué es
-El material de iOS 26: vidrio translúcido que deja ver lo de detrás desenfocado, lo **refracta**
-en los bordes, **refleja** la luz con un brillo especular, tiene **profundidad** (sombra y filo
+El material de iOS 26: vidrio translúcido que deja ver lo de detrás desenfocado, **refleja** la luz con un brillo especular, tiene **profundidad** (sombra y filo
 iluminado arriba) y **se adapta** a lo que tiene detrás.
 
 ### Cómo se construye
@@ -187,12 +190,15 @@ iluminado arriba) y **se adapta** a lo que tiene detrás.
 | Lámina | Tinte + desenfoque | `::before` con el tinte del grosor y `backdrop-filter: blur() saturate(1.6)` |
 | Filo | Luz que entra por arriba y se apaga abajo | `::after` de 1 px (máscara que solo deja el borde) con degradado vertical |
 | Luz del puntero | Reflejo pequeño de una sola luz | en el filo, un círculo de **100 px**; dentro de la lámina, otro de **70 px** muy tenue (35 % en claro, 6 % en oscuro). Fijos a la ventana, así todas las láminas reflejan la misma luz. Solo con ratón |
-| Refracción | La gota dobla lo de detrás | `backdrop-filter: url(#lg-refract)` (`feDisplacementMap`). Solo en Chromium; Safari y Firefox, desenfoque y brillo |
 | Profundidad | Flota | sombra exterior suave con desplazamiento (`--glass-shadow`) |
 | Adaptación | Se tiñe con quien actúa | fondo azul a la izquierda con Alice y cálido a la derecha con Bob, y el tinte del vidrio se mezcla con ese color (`--phase-tint`); 700 ms |
 
-El vidrio va en el **pseudo-elemento**, no en el elemento: así el elemento no es «raíz de fondo» y
-la gota que lleva dentro refracta la página de detrás y no solo el tinte de su lámina.
+El vidrio va en el **pseudo-elemento** (`::before`), no en el elemento, para que el filo y la
+luz (`::after`) queden encima de la lámina.
+
+**Sin refracción y sin `backdrop-filter` en piezas pequeñas que se mueven** (la gota del paso
+actual): el filtro trabaja sobre un cuadrado y, al moverse o al llegar a su sitio en una
+transición, se veían sus cuatro esquinas. Su aspecto de cristal sale del brillo y el anillo.
 
 ### Grosores (los únicos tres)
 | Grosor | Uso | Claro | Oscuro | Desenfoque |

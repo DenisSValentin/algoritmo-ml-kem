@@ -1453,9 +1453,6 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
   }, { passive: true });
 }
 
-// Refracción real (backdrop-filter con un filtro SVG) solo donde se sabe que se dibuja bien:
-// Chromium. En Safari y Firefox el vidrio se queda con desenfoque y brillo, sin refracción.
-if (navigator.userAgentData?.brands?.some((b) => /Chromium/.test(b.brand))) root.classList.add("can-refract");
 
 // ------------------------------------------------------------------ arranque
 
