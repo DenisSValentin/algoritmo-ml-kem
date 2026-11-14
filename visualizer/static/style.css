@@ -140,26 +140,32 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .wire[data-dir="rtl"] { flex-direction: row-reverse; justify-content: center; }
 .wire-label b { font-family: var(--font-data); }
 .wire-track { position: absolute; inset: 0; pointer-events: none; }
-.wire-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; border-radius: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
-.wire[data-dir="rtl"] .wire-track::after { transform-origin: right; }
-/* redondeado solo en la cola: el otro extremo se junta recto con la base de la punta */
-.wire:not([data-dir="rtl"]) .wire-track::after { border-radius: 2px 0 0 2px; }
-.wire[data-dir="rtl"] .wire-track::after { border-radius: 0 2px 2px 0; }
-.wire.tampered .wire-track::after { background: var(--bad); }
 
-/* Punta de flecha en cada línea: siempre dice hacia dónde va (gris si la línea no está activa).
-   Se coloca con transform; 100cqi es el ancho del canal. La punta ocupa los 8 px finales del
-   canal y sobresale 4 px; la línea acaba justo en su base (más abajo, .wire-track). En «rtl»
-   la línea empieza 8 px a la derecha, por eso allí los desplazamientos llevan 8 px menos */
-.wire-track::before {
-  content: ""; position: absolute; z-index: 1; left: 0; bottom: -9px; width: 12px; height: 14px;
-  background: var(--line-off);
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-  transform: translateX(calc(100cqi - 8px));
+/* La flecha de color (línea y punta) es UNA sola figura, recortada con clip-path. Con dos piezas
+   que se tocan, el borde común cae a veces entre dos píxeles y se ve una raya fina entre la
+   línea y la punta. La caja sobresale 4 px por cada lado del canal; --head es dónde está la base
+   de la punta: en reposo, 8 px antes del final del canal (la punta sobresale 4 px). En «rtl» es
+   la misma figura reflejada (la caja es simétrica, así que scaleX(-1) no la mueve) */
+@property --head { syntax: "<length-percentage>"; inherits: false; initial-value: 0px; }
+.wire::before {
+  content: none; position: absolute; z-index: 1; left: -4px; right: -4px; bottom: -5px; height: 14px; pointer-events: none;
+  --head: calc(100% - 12px);
+  background: var(--accent);
+  clip-path: polygon(min(4px, var(--head)) 5px, var(--head) 5px, var(--head) 0, calc(var(--head) + 12px) 7px, var(--head) 14px, var(--head) 9px, min(4px, var(--head)) 9px);
 }
-.wire[data-dir="rtl"] .wire-track::before { clip-path: polygon(100% 0, 0 50%, 100% 100%); transform: translateX(-12px); }
-.wire.active .wire-track::before { background: var(--accent); }
-.wire.tampered .wire-track::before { background: var(--bad); }
+.wire.active::before { content: ""; }
+.wire.tampered::before { background: var(--bad); }
+.wire[data-dir="rtl"]::before { transform: scaleX(-1); }
+
+/* Punta gris de la línea que aún no está activa: dice hacia dónde irá. La línea discontinua
+   acaba 3 px antes (más abajo, .wire-track): las dos son translúcidas y, si se tocan o se
+   pisan, se ve una raya o un rectángulo más claro */
+.wire::after {
+  content: ""; position: absolute; left: calc(100% - 8px); bottom: -5px; width: 12px; height: 14px; pointer-events: none;
+  background: var(--line-off); clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.wire[data-dir="rtl"]::after { left: -4px; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.wire.active::after { content: none; }
 .tamper-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--bad); font-size: 0.75rem; font-weight: 600; }
 
 /* Enviar: la primera vez que se llega a un paso donde viaja ek o c, la línea se dibuja desde
@@ -167,15 +173,15 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
    tarjeta de quien recibe hace una onda. Con movimiento reducido, la línea aparece entera */
 @media (prefers-reduced-motion: no-preference) {
   .wire.travel .wire-track { border-bottom-style: dashed !important; border-bottom-color: var(--line-off) !important; }
-  .wire.travel .wire-track::after { animation: send 700ms var(--ease-in-out) 120ms forwards; }
-  /* la flecha va en la punta de la línea mientras se dibuja, y se queda en quien recibe */
-  .wire.travel .wire-track::before { animation: head-ltr 700ms var(--ease-in-out) 120ms backwards; }
-  .wire.travel[data-dir="rtl"] .wire-track::before { animation-name: head-rtl; }
+  /* la punta va al frente de la línea mientras se dibuja, y se queda en quien recibe */
+  .wire.travel::before { animation: send 700ms var(--ease-in-out) 120ms backwards; }
+  /* mientras viaja, la línea gris conserva su punta gris; se quita al llegar la de color */
+  .wire.travel::after { content: ""; animation: head-ghost 0s linear 820ms forwards; }
   .party.receiving { animation: receive 560ms var(--ease-out) 800ms forwards; }   /* nada hasta que llega la línea */
 }
-@keyframes send { to { transform: scaleX(1); } }
-@keyframes head-ltr { from { transform: translateX(-4px); } }
-@keyframes head-rtl { from { transform: translateX(calc(100cqi - 16px)); } }
+/* sale del extremo de quien envía, 4 px por fuera del canal, como al llegar */
+@keyframes send { from { --head: 0px; } }
+@keyframes head-ghost { to { visibility: hidden; } }
 @keyframes receive {
   from { outline: 2px solid var(--accent); outline-offset: 0; }
   to { outline: 2px solid transparent; outline-offset: 10px; }
@@ -704,13 +710,12 @@ body { font-weight: 400; letter-spacing: 0; }
 .channel { padding: 4px 8px 14px; gap: 12px; }
 .channel-name { text-align: center; }
 .wire { padding: 0 0 7px; }
+/* la línea discontinua acaba 3 px antes de la punta gris (8 px antes del final + 3 de hueco);
+   cuando la línea está activa, la tapa la flecha de color y se oculta */
 .wire-track { top: auto; bottom: 0; height: 0; border-bottom: 4px dashed var(--line-off); }
-/* la línea acaba donde empieza la punta: el gris es translúcido y, si pasaba por debajo,
-   se veía un rectángulo más claro dentro del triángulo */
-.wire:not([data-dir="rtl"]) .wire-track { right: 8px; }
-.wire[data-dir="rtl"] .wire-track { left: 8px; }
-.wire.active .wire-track { border-bottom-style: solid; border-bottom-color: var(--accent); }
-.wire.tampered .wire-track { border-bottom-color: var(--bad); }
+.wire:not([data-dir="rtl"]) .wire-track { right: 11px; }
+.wire[data-dir="rtl"] .wire-track { left: 11px; }
+.wire.active .wire-track { border-bottom-color: transparent; }
 .wire.active { color: var(--text); }
 .wire.tampered { color: var(--bad); }
 .tamper-tag { justify-content: center; }
