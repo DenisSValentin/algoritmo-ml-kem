@@ -667,7 +667,8 @@ body { font-weight: 400; letter-spacing: 0; }
 .byline { margin: 6px 0 0; max-width: 60ch; color: var(--muted); font-size: 0.875rem; line-height: 1.45; }
 .byline span { display: block; }   /* qué es, y en otra línea de quién es */
 .controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }   /* acciones centradas bajo los parámetros */
-.actions { display: flex; gap: 8px; }
+/* si los dos botones no caben en una fila (móviles de 320 px), el segundo baja a la siguiente */
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* --------------------------------------------------------------- Alice · canal · Bob */
 
@@ -859,6 +860,10 @@ body { font-weight: 400; letter-spacing: 0; }
   .steps .bead { top: 2px; }
   /* el dock lleva los números: vidrio grueso para que no se lea lo que pasa por debajo */
   .pager::before { background: linear-gradient(var(--phase-tint), var(--phase-tint)), var(--glass-thick); -webkit-backdrop-filter: blur(var(--blur-thick)) saturate(1.6); backdrop-filter: blur(var(--blur-thick)) saturate(1.6); }
+}
+/* móviles muy estrechos (320 px): en el selector solo cabe «k = 4», sin las dimensiones */
+@media (max-width: 360px) {
+  .param-dim { display: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

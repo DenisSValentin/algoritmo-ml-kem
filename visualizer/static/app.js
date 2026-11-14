@@ -1271,7 +1271,7 @@ function renderParamPicker() {
       title: `Tecla ${i + 1}`,
       onclick: () => selectParams(p.name),
     }, h("span", { class: "param-name" }, p.name.replace("ML-KEM-", ""), h("span", { class: "param-prefix" }, "ML-KEM-")),
-      h("small", {}, `k = ${p.k} · ${fmt(p.k * 256)} dim.`))));
+      h("small", {}, `k = ${p.k}`, h("span", { class: "param-dim" }, ` · ${fmt(p.k * 256)} dim.`)))));
     picker.querySelectorAll("button").forEach((b) => thumbObserver.observe(b));
   }
   for (const b of picker.querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.name === state.params));
