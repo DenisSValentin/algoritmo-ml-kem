@@ -746,8 +746,11 @@ body { font-weight: 400; letter-spacing: 0; }
 
 /* --------------------------------------------------------------- abajo: el dock con la línea del 1 al 9 */
 
+/* Centrado con left/right y margin, sin translate: un transform hace que la luz del puntero
+   (degradado «fixed») se mida desde el dock y no desde la ventana, y el dock se iluminaba
+   cuando el ratón estaba arriba de la página */
 .pager {
-  position: fixed; z-index: 24; left: 50%; translate: -50% 0; bottom: max(14px, env(safe-area-inset-bottom));
+  position: fixed; z-index: 24; left: 0; right: 0; margin-inline: auto; bottom: max(14px, env(safe-area-inset-bottom));
   width: var(--dock-w); height: var(--dock-h);
   display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-radius: 28px;
 }
