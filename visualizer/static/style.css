@@ -142,18 +142,22 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .wire-track { position: absolute; inset: 0; pointer-events: none; }
 .wire-track::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; border-radius: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
 .wire[data-dir="rtl"] .wire-track::after { transform-origin: right; }
+/* redondeado solo en la cola: el otro extremo se junta recto con la base de la punta */
+.wire:not([data-dir="rtl"]) .wire-track::after { border-radius: 2px 0 0 2px; }
+.wire[data-dir="rtl"] .wire-track::after { border-radius: 0 2px 2px 0; }
 .wire.tampered .wire-track::after { background: var(--bad); }
 
 /* Punta de flecha en cada línea: siempre dice hacia dónde va (gris si la línea no está activa).
-   Se coloca con transform; 100cqi es el ancho de la línea. La punta sobresale 4 px del final
-   para que el extremo de la línea (4 px de grosor) quede dentro del triángulo y no asome */
+   Se coloca con transform; 100cqi es el ancho del canal. La punta ocupa los 8 px finales del
+   canal y sobresale 4 px; la línea acaba justo en su base (más abajo, .wire-track). En «rtl»
+   la línea empieza 8 px a la derecha, por eso allí los desplazamientos llevan 8 px menos */
 .wire-track::before {
   content: ""; position: absolute; z-index: 1; left: 0; bottom: -9px; width: 12px; height: 14px;
   background: var(--line-off);
   clip-path: polygon(0 0, 100% 50%, 0 100%);
   transform: translateX(calc(100cqi - 8px));
 }
-.wire[data-dir="rtl"] .wire-track::before { clip-path: polygon(100% 0, 0 50%, 100% 100%); transform: translateX(-4px); }
+.wire[data-dir="rtl"] .wire-track::before { clip-path: polygon(100% 0, 0 50%, 100% 100%); transform: translateX(-12px); }
 .wire.active .wire-track::before { background: var(--accent); }
 .wire.tampered .wire-track::before { background: var(--bad); }
 .tamper-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--bad); font-size: 0.75rem; font-weight: 600; }
@@ -171,7 +175,7 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 }
 @keyframes send { to { transform: scaleX(1); } }
 @keyframes head-ltr { from { transform: translateX(-4px); } }
-@keyframes head-rtl { from { transform: translateX(calc(100cqi - 8px)); } }
+@keyframes head-rtl { from { transform: translateX(calc(100cqi - 16px)); } }
 @keyframes receive {
   from { outline: 2px solid var(--accent); outline-offset: 0; }
   to { outline: 2px solid transparent; outline-offset: 10px; }
@@ -701,6 +705,10 @@ body { font-weight: 400; letter-spacing: 0; }
 .channel-name { text-align: center; }
 .wire { padding: 0 0 7px; }
 .wire-track { top: auto; bottom: 0; height: 0; border-bottom: 4px dashed var(--line-off); }
+/* la línea acaba donde empieza la punta: el gris es translúcido y, si pasaba por debajo,
+   se veía un rectángulo más claro dentro del triángulo */
+.wire:not([data-dir="rtl"]) .wire-track { right: 8px; }
+.wire[data-dir="rtl"] .wire-track { left: 8px; }
 .wire.active .wire-track { border-bottom-style: solid; border-bottom-color: var(--accent); }
 .wire.tampered .wire-track { border-bottom-color: var(--bad); }
 .wire.active { color: var(--text); }
