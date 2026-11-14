@@ -642,6 +642,12 @@ body { font-weight: 400; letter-spacing: 0; }
   align-items: center; gap: 8px; padding: 10px; margin-bottom: 18px;
 }
 .party { padding: 10px 14px; border-radius: 16px; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
+/* El rol y el secreto van seguidos en un solo párrafo: si el rol se parte, el secreto
+   continúa en la misma línea en vez de dejar un hueco a la derecha */
+.party { display: block; line-height: 1.4; }
+.party-name { display: block; margin-bottom: 2px; }
+.party-role, .party-secret { display: inline; }
+.party-secret::before { content: " · "; font-family: var(--font-ui); color: var(--muted); }
 .party-bob { text-align: right; align-items: flex-end; }
 .party-name { font: 800 1.0625rem/1.2 var(--font-display); }
 .party.active { background: var(--glass-fill); box-shadow: inset 0 0 0 2px var(--accent), 0 4px 14px -6px var(--accent-shadow); }
