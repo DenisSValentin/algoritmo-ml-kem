@@ -698,7 +698,9 @@ body { font-weight: 400; letter-spacing: 0; }
 .party.active .party-tag { color: var(--accent); }
 .party.active { background: var(--glass-fill); box-shadow: inset 0 0 0 2px var(--accent), 0 4px 14px -6px var(--accent-shadow); }
 .party.active .party-name { color: var(--accent); }
-.channel { padding: 4px 8px; gap: 10px; }
+/* la punta de la flecha baja 9 px por debajo de su línea: el canal le deja ese sitio abajo, así
+   las tarjetas de Alice y Bob (que se estiran al alto de la fila) la cubren y no apunta a la nada */
+.channel { padding: 4px 8px 14px; gap: 12px; }
 .channel-name { text-align: center; }
 .wire { padding: 0 0 7px; }
 .wire-track { top: auto; bottom: 0; height: 0; border-bottom: 4px dashed var(--line-off); }
