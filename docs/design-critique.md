@@ -59,5 +59,5 @@ eso es lo que más falta.
   `hover` solo con ratón, iconos SVG de un mismo trazo, `#paso-N` reactivo.
 - **Corregir** la etiqueta recortada del reloj (dos líneas a los lados).
 
-Los tres prototipos (`visualizer/static/prototypes/`) aplican todo esto; difieren en la dirección
-visual. Ver `DESIGN.md`.
+Todo esto está aplicado en el diseño definitivo (`visualizer/static/`), elegido tras tres rondas
+de prototipos. Ver `DESIGN.md`.

@@ -2,6 +2,8 @@
 
 // Visualizador de ML-KEM. Todos los datos vienen de la implementación real en Python, que se
 // ejecuta en el propio navegador con Pyodide (pyodide-worker.js) y devuelve sus valores intermedios.
+// El diseño (DESIGN.md) es vidrio sobre un fondo de color que cambia según quién actúa, con la
+// línea de pasos en un dock abajo. ?fallo simula que Pyodide no carga, para revisar ese estado.
 
 const Q = 3329;
 const PARAMS = [
@@ -21,6 +23,10 @@ const state = { params: "ML-KEM-768", step: 0, tamper: false, data: null, bench:
 // python("exchange", ...) llama a la función de Python del mismo nombre en el worker y
 // devuelve su resultado ya convertido de JSON
 const python = (() => {
+  // ?fallo simula que Pyodide no carga, para revisar el estado de error
+  if (new URLSearchParams(location.search).has("fallo")) {
+    return () => new Promise((_, reject) => setTimeout(() => reject(new Error("Failed to fetch dynamically imported module: https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.mjs")), 1200));
+  }
   const worker = new Worker("pyodide-worker.js", { type: "module" });
   const pending = new Map();
   let nextId = 0;
@@ -119,6 +125,8 @@ function readPalette() {
     bad: css.getPropertyValue("--bad").trim(), accentCss: css.getPropertyValue("--accent").trim(),
     negCss: css.getPropertyValue("--neg").trim(), posCss: css.getPropertyValue("--pos").trim(),
     surface2: css.getPropertyValue("--surface-2").trim(),
+    fontData: css.getPropertyValue("--font-data").trim() || "ui-monospace, monospace",
+    fontUi: css.getPropertyValue("--font-ui").trim() || "system-ui, sans-serif",
   };
 }
 
@@ -155,14 +163,14 @@ function poly(values, { kind = "uniform", name = "f", caption = null, scale = 4,
   const image = ctx.createImageData(16, 16);
   values.forEach((v, i) => image.data.set([...colorFor(kind, v, maxAbs, range), 255], i * 4));
   ctx.putImageData(image, 0, 0);
-  canvas.addEventListener("mousemove", (event) => {
+  canvas.addEventListener("pointermove", (event) => {
     const rect = canvas.getBoundingClientRect();
     const col = Math.min(15, Math.floor(((event.clientX - rect.left) / rect.width) * 16));
     const row = Math.min(15, Math.floor(((event.clientY - rect.top) / rect.height) * 16));
     const i = row * 16 + col;
     showTip(event, `${name}, coeficiente ${i} = ${values[i]}`);
   });
-  canvas.addEventListener("mouseleave", hideTip);
+  canvas.addEventListener("pointerleave", hideTip);
   return h("figure", { class: "poly", style: "margin:0" }, canvas, caption ? h("figcaption", {}, caption) : null);
 }
 
@@ -213,7 +221,7 @@ function histogram(values, { min, max, width = 420, height = 130, color, markers
   ctx.lineTo(width - pad.r, pad.t + plotH + 0.5);
   ctx.stroke();
   const xOf = (v) => pad.l + ((v - min + 0.5) / (max - min + 1)) * plotW;
-  ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.font = `11px ${PAL.fontData}`;
   ctx.fillStyle = PAL.muted;
   ctx.textAlign = "left";
   ctx.fillText(String(min), pad.l, height - 6);
@@ -264,14 +272,17 @@ function drawClockFrame(ctx, cx, cy, radius, { regions = false } = {}) {
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
   ctx.stroke();
-  ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.font = `11px ${PAL.fontData}`;
   ctx.fillStyle = PAL.muted;
   ctx.textAlign = "center";
-  const labels = [[0, "0"], [Q / 4, "q/4 ≈ 832"], [Q / 2, "q/2 ≈ 1665"], [(3 * Q) / 4, "3q/4 ≈ 2497"]];
-  for (const [value, text] of labels) {
+  // A los lados, la etiqueta va en dos líneas: en una sola se salía del lienzo
+  const labels = [[0, ["0"]], [Q / 4, ["q/4", "≈ 832"]], [Q / 2, ["q/2 ≈ 1665"]], [(3 * Q) / 4, ["3q/4", "≈ 2497"]]];
+  for (const [value, lines] of labels) {
     const a = zqAngle(value);
-    const r = radius + 34;
-    ctx.fillText(text, cx + r * Math.cos(a), cy + r * Math.sin(a) + 4);
+    const r = radius + (lines.length > 1 ? 38 : 34);
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a) + 4 - (lines.length - 1) * 7;
+    lines.forEach((line, n) => ctx.fillText(line, x, y + n * 14));
   }
 }
 
@@ -417,7 +428,7 @@ function latticeDemo(dimension) {
       ctx.lineTo(origin[0] + b[0], origin[1] - b[1]);
       ctx.stroke();
       ctx.fillStyle = PAL.muted;
-      ctx.font = "12px system-ui";
+      ctx.font = `12px ${PAL.fontUi}`;
       ctx.fillText(name, origin[0] + b[0] + 4, origin[1] - b[1] - 4);
     }
     ctx.fillStyle = PAL.muted;
@@ -586,7 +597,7 @@ function lattice3dDemo(dimension) {
       ctx.stroke();
     }
     const o = project([0, 0, 0]);
-    ctx.font = "12px system-ui";
+    ctx.font = `12px ${PAL.fontUi}`;
     basis.forEach((b, n) => {
       const q = project(b);
       ctx.strokeStyle = ctx.fillStyle = PAL.muted;
@@ -736,7 +747,7 @@ function maskClock(d) {
   function draw() {
     ctx.clearRect(0, 0, width, height);
     drawClockFrame(ctx, cx, cy, radius, { regions: true });
-    ctx.font = "12px system-ui";
+    ctx.font = `12px ${PAL.fontUi}`;
     ctx.textAlign = "center";
     ctx.fillStyle = PAL.negCss;
     ctx.fillText("se lee 0", cx, cy - radius + 52);
@@ -828,7 +839,7 @@ const STEPS = [
           <p>Un <b>KEM</b> (mecanismo de encapsulamiento de claves) son tres algoritmos:</p>
           <ul>
             <li><b>KeyGen</b>: Alice crea un par de claves y publica <code>ek</code>.</li>
-            <li><b>Encaps(ek)</b>: Bob genera una clave <code>K</code> y la "encapsula" en un texto cifrado <code>c</code>.</li>
+            <li><b>Encaps(ek)</b>: Bob genera una clave <code>K</code> y la «encapsula» en un texto cifrado <code>c</code>.</li>
             <li><b>Decaps(dk, c)</b>: Alice abre <code>c</code> con su clave privada y obtiene la misma <code>K</code>.</li>
           </ul>
           <p class="note">Todo lo que verás sale de una ejecución real de la implementación en Python. Usa <kbd>→</kbd> para avanzar.</p>`,
@@ -880,12 +891,12 @@ const STEPS = [
       return {
         explain: `
           <h2>2. ¿Qué es un retículo?</h2>
-          <p>Un <b>retículo</b> es el conjunto de puntos que se obtienen sumando y restando un número entero de veces unos vectores base. A la derecha, ${state.latticeView === "3d" ? "b₁, b₂ y b₃ generan todos los puntos grises; la caja es la celda que se repite" : "b₁ y b₂ generan todos los puntos grises"}.</p>
+          <p>Un <b>retículo</b> es el conjunto de puntos que se obtienen sumando y restando un número entero de veces unos vectores base. En la figura, ${state.latticeView === "3d" ? "b₁, b₂ y b₃ generan todos los puntos grises; la caja es la celda que se repite" : "b₁ y b₂ generan todos los puntos grises"}.</p>
           <p>El problema difícil: te doy un punto ★ que está <i>cerca</i> de un punto del retículo, pero no encima. ¿Cuál es el punto del retículo más cercano? Es el <b>problema del vector más cercano (CVP)</b>.</p>
           ${dimensions}
           <p>La relación con ML-KEM: la clave pública es</p>
           <div class="formula">t = A·s + e</div>
-          <p>Sin el error <code>e</code>, se despejaría <code>s</code> por Gauss en microsegundos. Con <code>e</code>, <code>t</code> es "un punto cerca del retículo" y recuperar <code>s</code> equivale a resolver CVP. Eso es <b>LWE</b> (Learning With Errors).</p>
+          <p>Sin el error <code>e</code>, se despejaría <code>s</code> por Gauss en microsegundos. Con <code>e</code>, <code>t</code> es «un punto cerca del retículo» y recuperar <code>s</code> equivale a resolver CVP. Eso es <b>LWE</b> (Learning With Errors).</p>
           <p class="note">Sube el ruido: si es demasiado grande, el punto más cercano deja de ser el original. Por eso en ML-KEM el ruido es pequeño: suficiente para esconder el secreto, insuficiente para estropear el descifrado.</p>`,
         visual: latticeSection(dim),
       };
@@ -901,11 +912,11 @@ const STEPS = [
       return {
         explain: `
           <h2>3. Los números con los que trabaja</h2>
-          <p><b>Z<sub>q</sub></b>: enteros módulo q = 3329. Al llegar a 3329 se vuelve a 0, como en un reloj. 3328 es lo mismo que −1: por eso se dice que 3328 es un número "pequeño".</p>
+          <p><b>Z<sub>q</sub></b>: enteros módulo q = 3329. Al llegar a 3329 se vuelve a 0, como en un reloj. 3328 es lo mismo que −1: por eso se dice que 3328 es un número «pequeño».</p>
           <p><b>R<sub>q</sub> = Z<sub>q</sub>[X]/(X²⁵⁶ + 1)</b>: polinomios de 256 coeficientes en Z<sub>q</sub>. Al multiplicar, X²⁵⁶ se sustituye por −1.</p>
           <p><b>Módulo R<sub>q</sub><sup>k</sup></b>: vectores de k polinomios. Ese <b>k</b> es lo que eliges arriba con <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>: cuántos polinomios tiene cada vector y el tamaño de la matriz A (k×k). Ahora k = ${p.k}, así que el retículo tiene ${p.k} × 256 = ${fmt(p.lattice_dimension)} dimensiones.</p>
           <p>Por eso se llama <b>Module</b>-LWE: es LWE con matrices y vectores, pero cuyos elementos son polinomios. Así una matriz de ${fmt(p.lattice_dimension)}×${fmt(p.lattice_dimension)} números se describe con solo ${p.k}×${p.k} polinomios, y las claves son mucho más pequeñas.</p>
-          <p class="note">En el resto de pasos cada polinomio se dibuja como un cuadrado de 16×16 celdas (256 coeficientes). Pasa el ratón por encima para ver cada valor.</p>`,
+          <p class="note">En el resto de pasos cada polinomio se dibuja como un cuadrado de 16×16 celdas (256 coeficientes). Pasa el ratón (o el dedo) por encima para ver cada valor.</p>`,
         visual: h("div", {},
           h("section", {}, h("h4", {}, "Z_q como un reloj de 3329 horas"), clockDemo()),
           h("section", {}, h("h4", {}, "Multiplicar por X en un anillo de juguete (8 coeficientes, X⁸ = −1)"), ringDemo()),
@@ -938,7 +949,7 @@ const STEPS = [
           <div class="formula">t = A·s + e</div>
           <p>Fíjate en los colores: s y e solo toman ${2 * p.eta1 + 1} valores (de −${p.eta1} a ${p.eta1}), pero t, que se calcula a partir de ellos, parece ruido uniforme. Ese es el corazón de LWE: t no revela s.</p>
           <div class="formula">ek = (t, ρ) → 384·${p.k} + 32 = ${fmt(p.ek_size)} bytes<br>dk = (s, ek, H(ek), z) → ${fmt(p.dk_size)} bytes</div>
-          <p class="note">La <b>NTT</b> (transformada teórico-numérica) es a los polinomios lo que la FFT a las señales: convierte cada multiplicación de polinomios (256² productos) en 128 productos pequeños. Por eso Â se guarda "ya transformada".</p>`,
+          <p class="note">La <b>NTT</b> (transformada teórico-numérica) es a los polinomios lo que la FFT a las señales: convierte cada multiplicación de polinomios (256² productos) en 128 productos pequeños. Por eso Â se guarda «ya transformada».</p>`,
         visual: h("div", {},
           h("section", {},
             h("h4", {}, `t = A·s + e  (k = ${p.k})`),
@@ -979,7 +990,7 @@ const STEPS = [
           <p>3. Calcula</p>
           <div class="formula">u = Aᵀ·y + e₁<br>v = tᵀ·y + e₂ + μ</div>
           <p><b>μ</b> es el mensaje escondido: cada bit 0 se convierte en 0 y cada bit 1 en ⌈q/2⌋ = 1665, el punto del reloj más alejado de 0.</p>
-          <p>En <code>v</code>, el mensaje queda tapado por <code>tᵀ·y</code>, que parece aleatorio. Solo quien conoce <code>s</code> puede reconstruir esa "máscara" y quitarla.</p>
+          <p>En <code>v</code>, el mensaje queda tapado por <code>tᵀ·y</code>, que parece aleatorio. Solo quien conoce <code>s</code> puede reconstruir esa «máscara» y quitarla.</p>
           <p>4. Comprime <code>u</code> y <code>v</code> y envía <code>c</code> a Alice.</p>`,
         visual: h("div", {},
           h("section", {},
@@ -1178,38 +1189,124 @@ const STEPS = [
 
 // ------------------------------------------------------------------ cabecera, flujo y navegación
 
+// Iconos dibujados (trazo 1,75 px, misma familia en toda la página)
+const ICONS = {
+  right: "M5 12h14M13 6l6 6-6 6",
+  left: "M19 12H5M11 6l-6 6 6 6",
+  refresh: "M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6",
+  bolt: "M13 3 5 14h6l-1 7 8-11h-6l1-7Z",
+  check: "M5 12.5l4.5 4.5L19 7",
+  list: "M4 6h16M4 12h16M4 18h10",
+};
+function icon(name, size = 18) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", size);
+  svg.setAttribute("height", size);
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", `icon icon-${name}`);
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
+// Quién actúa en cada paso: lo usan las marcas del recorrido
+const actorOf = (step) => (step.flow.alice ? "alice" : step.flow.bob ? "bob" : "none");
+
+// El selector de parámetros se crea una vez y luego solo cambia cuál está marcado: así la
+// pieza que marca la opción elegida (.seg-thumb) puede deslizarse de una a otra.
+const thumbObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) placeThumb(entry.target.closest(".segmented"), false);
+});
+
+function placeThumb(group, animate = true) {
+  const thumb = group?.querySelector(":scope > .seg-thumb");
+  const on = group?.querySelector(':scope > [aria-checked="true"]');
+  if (!thumb || !on || !on.offsetWidth) return;
+  const transform = `translate(${on.offsetLeft}px, ${on.offsetTop}px)`;
+  if (thumb.style.transform === transform && thumb.style.width === `${on.offsetWidth}px`) return; // ya está en su sitio
+  if (!animate) group.removeAttribute("data-ready");
+  thumb.style.width = `${on.offsetWidth}px`;
+  thumb.style.height = `${on.offsetHeight}px`;
+  thumb.style.transform = transform;
+  // La primera colocación (y la que sigue a un cambio de tamaño) va sin animación: se fija la
+  // posición leyendo el estilo y solo entonces se activa la transición para el siguiente cambio
+  if (!group.hasAttribute("data-ready")) {
+    void getComputedStyle(thumb).transform;
+    group.setAttribute("data-ready", "");
+  }
+}
+
 function renderParamPicker() {
   const picker = $("paramPicker");
-  picker.replaceChildren(...PARAMS.map((p, i) => h("button", {
-    role: "radio",
-    "aria-checked": String(p.name === state.params),
-    title: `Tecla ${i + 1}`,
-    onclick: () => selectParams(p.name),
-  }, p.name, h("small", {}, `k = ${p.k} · ${fmt(p.k * 256)} dim.`))));
+  if (!picker.querySelector(".seg-thumb")) {
+    picker.replaceChildren(h("span", { class: "seg-thumb", "aria-hidden": "true" }), ...PARAMS.map((p, i) => h("button", {
+      role: "radio",
+      "data-name": p.name,
+      title: `Tecla ${i + 1}`,
+      onclick: () => selectParams(p.name),
+    }, h("span", { class: "param-name" }, p.name.replace("ML-KEM-", ""), h("span", { class: "param-prefix" }, "ML-KEM-")),
+      h("small", {}, `k = ${p.k} · ${fmt(p.k * 256)} dim.`))));
+    picker.querySelectorAll("button").forEach((b) => thumbObserver.observe(b));
+  }
+  for (const b of picker.querySelectorAll("button")) b.setAttribute("aria-checked", String(b.dataset.name === state.params));
+  placeThumb(picker);
 }
 
 function renderStepper() {
-  $("stepper").replaceChildren(...STEPS.map((s, i) => h("button", {
+  $("stepper").replaceChildren(h("ol", { class: "steps" }, ...STEPS.map((s, i) => h("li", {
+    "data-state": i < state.step ? "done" : i === state.step ? "current" : "todo",
+    "data-actor": actorOf(s),
+  }, h("a", {
+    // Enlace de verdad: se puede abrir en otra pestaña o copiar; el cambio lo hace hashchange
+    href: `#paso-${i + 1}`,
+    // Nombre completo aunque el diseño solo enseñe el número (Vidrio en el dock)
+    "aria-label": `Paso ${i + 1}: ${s.title}`,
     "aria-current": i === state.step ? "step" : null,
-    onclick: () => goTo(i),
-  }, h("span", { class: "num" }, `${i + 1}`), ` ${s.title}`)));
+  }, h("span", { class: "mark", "aria-hidden": "true" }),
+    // La gota de vidrio del paso actual va aparte de su marca: así, al cambiar de paso, se
+    // desliza sola y en la línea no queda un hueco donde se vea pasar la raya
+    i === state.step ? h("span", { class: "bead", "aria-hidden": "true" }) : null,
+    h("span", { class: "num" }, `${i + 1}`), h("span", { class: "label" }, s.title))))));
+  const current = STEPS[state.step];
+  $("stepStatus").replaceChildren(
+    h("span", { class: "status-num" }, `Paso ${state.step + 1} de ${STEPS.length}`),
+    h("span", { class: "status-title" }, current.title));
   $("btnPrev").disabled = state.step === 0;
   $("btnNext").disabled = state.step === STEPS.length - 1;
+  $("btnNext").querySelector(".next-title").textContent = STEPS[state.step + 1]?.title || "Fin";
+  $("btnPrev").querySelector(".prev-title").textContent = STEPS[state.step - 1]?.title || "Inicio";
+  document.documentElement.dataset.phase = actorOf(current);
+  document.documentElement.dataset.step = String(state.step + 1);
 }
 
+// La ficha de ek o c recorre el canal la primera vez que se ve un paso donde viaja
+let lastFlowStep = null;
 function renderFlow(d) {
   const f = STEPS[state.step].flow;
   const dc = d.decaps;
+  const travel = lastFlowStep !== null && lastFlowStep !== state.step;
+  lastFlowStep = state.step;
+  const wire = (name, size, dir, active, extra = "") => h("div", {
+    class: `wire wire-${name} ${active ? "active" : ""} ${active && travel ? "travel" : ""} ${extra}`,
+    "data-dir": dir,
+  },
+  h("span", { class: "wire-track", "aria-hidden": "true" }, h("i", { class: "token" })),
+  h("span", { class: "wire-label" }, h("b", {}, name), ` · ${fmt(size)} B`),
+  icon(dir === "ltr" ? "right" : "left", 16));
   $("flow").replaceChildren(
-    h("div", { class: `party ${f.alice ? "active" : ""}` },
-      h("h3", {}, "Alice"), h("div", { class: "role" }, "receptora · KeyGen y Decaps"),
-      h("div", { class: "secret" }, state.step >= 6 ? `K′ = ${short(dc.K_final, 8)}` : "guarda dk en secreto")),
-    h("div", { class: "channel" },
-      h("div", { class: `wire ${f.ek ? "active" : ""}` }, `ek · ${fmt(d.params.ek_size)} B`, h("span", { class: "arrow" }, "→")),
-      h("div", { class: `wire ${f.c ? "active" : ""} ${state.tamper ? "tampered" : ""}` }, h("span", { class: "arrow" }, "←"), `c · ${fmt(d.params.ciphertext_size)} B`, state.tamper ? " ⚡ manipulado" : "")),
-    h("div", { class: `party ${f.bob ? "active" : ""}` },
-      h("h3", {}, "Bob"), h("div", { class: "role" }, "emisor · Encaps"),
-      h("div", { class: "secret" }, state.step >= 4 ? `K = ${short(d.encaps.K, 8)}` : "recibe ek")),
+    h("div", { class: `party party-alice ${f.alice ? "active" : ""}` },
+      h("span", { class: "party-name" }, "Alice"), h("span", { class: "party-role" }, "receptora · KeyGen y Decaps"),
+      h("span", { class: "party-secret" }, state.step >= 6 ? `K′ = ${short(dc.K_final, 8)}` : "guarda dk en secreto")),
+    h("div", { class: "channel", "aria-label": "Canal público" },
+      h("span", { class: "channel-name" }, "canal público"),
+      wire("ek", d.params.ek_size, "ltr", f.ek),
+      wire("c", d.params.ciphertext_size, "rtl", f.c, state.tamper ? "tampered" : ""),
+      state.tamper ? h("span", { class: "tamper-tag" }, icon("bolt", 14), "c manipulado") : null),
+    h("div", { class: `party party-bob ${f.bob ? "active" : ""}` },
+      h("span", { class: "party-name" }, "Bob"), h("span", { class: "party-role" }, "emisor · Encaps"),
+      h("span", { class: "party-secret" }, state.step >= 4 ? `K = ${short(d.encaps.K, 8)}` : "recibe ek")),
   );
 }
 
@@ -1220,12 +1317,14 @@ function render() {
   const d = state.data;
   if (!d) return;
   $("banner").replaceChildren(state.tamper
-    ? h("div", { class: "banner" }, `Modo manipulación: se ha invertido un bit del byte ${d.decaps.tampered_byte} del texto cifrado mientras viajaba por el canal. Pulsa M para desactivarlo.`)
+    ? h("div", { class: "banner", role: "status" }, icon("bolt", 16), h("span", {}, `Modo manipulación: se ha invertido un bit del byte ${d.decaps.tampered_byte} del texto cifrado mientras viajaba por el canal. Pulsa M para desactivarlo.`))
     : "");
   renderFlow(d);
   const { explain, visual } = STEPS[state.step].render(d);
   $("explain").innerHTML = explain;
   $("visual").replaceChildren(visual);
+  $("visual").dataset.fig = String(state.step + 1);
+  document.dispatchEvent(new CustomEvent("mlkem:render"));
 }
 
 function showLoader() {
@@ -1234,7 +1333,8 @@ function showLoader() {
     h("div", {},
       h("h2", {}, "Preparando Python en tu navegador"),
       h("p", { id: "loadStatus", role: "status" }, "Arrancando…"),
-      h("p", { class: "note" }, "El visualizador ejecuta la implementación real en Python dentro de la página, con Pyodide. La primera vez descarga unos 10 MB y tarda unos segundos; después el navegador lo guarda en caché."))));
+      h("p", { class: "note" }, "El visualizador ejecuta la implementación real en Python dentro de la página, con Pyodide. La primera vez descarga unos 10 MB y tarda unos segundos; después el navegador lo guarda en caché."))));
+  $("visual").replaceChildren(h("div", { class: "visual-skeleton", "aria-hidden": "true" }, h("span"), h("span"), h("span")));
 }
 
 function showError(error) {
@@ -1243,7 +1343,9 @@ function showError(error) {
     h("h2", {}, "No se pudo ejecutar Python en el navegador"),
     h("p", { class: "banner" }, error.message),
     h("p", {}, "Pyodide se descarga de cdn.jsdelivr.net: comprueba la conexión y que ninguna extensión lo bloquee, y recarga la página."),
-    h("p", { class: "note" }, "Si has abierto index.html directamente como fichero, arranca el servidor local con uv run ml-kem-visualizer."));
+    h("p", { class: "note" }, "Si has abierto index.html directamente como fichero, arranca el servidor local con uv run ml-kem-visualizer."),
+    h("p", {}, h("button", { class: "primary", onclick: () => location.reload() }, icon("refresh", 16), "Recargar")));
+  document.documentElement.dataset.error = "";
 }
 
 async function load() {
@@ -1264,16 +1366,37 @@ async function load() {
   render();
 }
 
+// Cambio de paso: el contenido se desliza en la dirección del recorrido (View Transitions).
+// Sin soporte o con movimiento reducido, el cambio es instantáneo.
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 function goTo(step) {
-  state.step = Math.max(0, Math.min(STEPS.length - 1, step));
-  history.replaceState(null, "", `#paso-${state.step + 1}`);
-  render();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const next = Math.max(0, Math.min(STEPS.length - 1, step));
+  if (next === state.step) return;
+  document.documentElement.dataset.dir = next > state.step ? "forward" : "back";
+  state.step = next;
+  history.replaceState(null, "", `${location.search}#paso-${state.step + 1}`);
+  const swap = () => {
+    render();
+    // Si se había bajado leyendo, el paso nuevo empieza arriba; si no, la página no se mueve
+    const stage = document.querySelector(".stage");
+    if (stage && stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ block: "start", behavior: "instant" });
+  };
+  if (document.startViewTransition && !reduceMotion.matches && state.data) {
+    // Al pulsar → varias veces seguidas, cada transición corta la anterior: no es un error
+    document.startViewTransition(swap).ready.catch(() => {});
+  } else swap();
 }
+
+// Enlaces a #paso-N y los botones atrás/adelante del navegador también cambian de paso
+window.addEventListener("hashchange", () => {
+  const step = Number((location.hash.match(/paso-(\d+)/) || [])[1]);
+  if (step) goTo(step - 1);
+});
 
 function selectParams(name) {
   if (name === state.params) return;
   state.params = name;
+  renderParamPicker(); // la selección se desliza ya, sin esperar a que Python termine
   load();
 }
 
@@ -1303,6 +1426,38 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+// ------------------------------------------------------------------ fondo y vidrio
+
+const root = document.documentElement;
+
+// Cada paso desplaza un poco las manchas de color del fondo: el vidrio lo refleja al avanzar
+document.addEventListener("mlkem:render", () => {
+  root.style.setProperty("--field-x", `${-state.step * 22}px`);
+  root.style.setProperty("--field-y", `${-state.step * 9}px`);
+});
+
+// Luz del puntero sobre el vidrio (solo ratón o trackpad). Una sola luz para todo: cada lámina
+// la refleja en su sitio porque el degradado va fijo a la ventana.
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  let frame = null;
+  let last = null;
+  document.addEventListener("pointermove", (event) => {
+    last = event;
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = null;
+      root.style.setProperty("--mx", `${last.clientX}px`);
+      root.style.setProperty("--my", `${last.clientY}px`);
+    });
+  }, { passive: true });
+}
+
+// Refracción real (backdrop-filter con un filtro SVG) solo donde se sabe que se dibuja bien:
+// Chromium. En Safari y Firefox el vidrio se queda con desenfoque y brillo, sin refracción.
+if (navigator.userAgentData?.brands?.some((b) => /Chromium/.test(b.brand))) root.classList.add("can-refract");
+
+// ------------------------------------------------------------------ arranque
 
 const initialStep = Number((location.hash.match(/paso-(\d+)/) || [])[1]);
 if (initialStep) state.step = Math.min(STEPS.length, initialStep) - 1;

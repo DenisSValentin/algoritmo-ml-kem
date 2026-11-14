@@ -3,12 +3,9 @@
 Sistema visual del visualizador de ML-KEM (`visualizer/`). Producto y público: `PRODUCT.md`.
 Crítica del diseño de partida: `docs/design-critique.md`.
 
-> **Estado (2026-11-13): en exploración, tercera ronda.** Hay dos direcciones construidas y
-> funcionando en `visualizer/static/prototypes/` (selector en local): Riel y Capa. Lo que Denis
-> elige se apunta en «Decisiones de Denis» y se convierte en el diseño publicado. Hasta entonces
-> lo publicado sigue siendo `visualizer/static/{index.html,style.css,app.js}` sin cambios.
-> **Antes de mergear a `main`:** pasar el diseño elegido a esos ficheros y borrar
-> `visualizer/static/prototypes/`; si no, `pages.yml` la publicaría en `/prototypes/`.
+> **Estado (2026-11-14): diseño definitivo elegido por Denis** tras tres rondas de prototipos,
+> ya aplicado en `visualizer/static/{index.html,style.css,app.js}` en la rama
+> `claude/redesign-3-propuestas-c212d3`. Se publica al mergear a `main`.
 
 ## Modo de la superficie
 
@@ -56,7 +53,7 @@ cualquier preferencia del agente. Antes de cambiar la interfaz, léelas.
   ejemplo, para diferenciar a Alice y Bob): hay que probarlo y que Denis lo vea.
   <!-- 2026-11-13: «que el fondo tenga puntitos confunde con el liquid glass»; luego «quizas siendo ahora más opaco algun dibujo si encaje bien, para diferenciar a alice y bob» -->
 
-## Lo común a cualquier dirección (decidido)
+## Comportamiento
 
 ### Contenido y estructura
 - 9 pasos fijos, un concepto por paso; texto primero, figura después (al lado en escritorio,
@@ -107,54 +104,71 @@ cualquier preferencia del agente. Antes de cambiar la interfaz, léelas.
 - Selección, foco, scrollbars y `color-scheme` con la paleta. Iconos SVG de un mismo trazo
   (1,75 px), no caracteres. `#paso-N` reacciona a enlaces y a atrás/adelante.
 
-## Primera ronda (descartada o absorbida)
+## Composición
 
-Tres direcciones construidas el 2026-11-13 (commit `9e2742f`, ya no están en el selector):
+- **Cabecera** (lámina de vidrio fina): título y descripción a la izquierda; a la derecha, en la
+  misma fila, el selector de parámetros (512 / 768 / 1024) y debajo «Nueva ejecución» y
+  «Manipular c». Por debajo de 900 px se apila.
+- **Contenido a todo el ancho** (máx. 1240 px): Alice · canal · Bob en una lámina fina; debajo,
+  texto (lámina gruesa) y figura (lámina normal) en dos columnas, una sola por debajo de 1100 px.
+- **Dock flotante abajo**, de vidrio: «anterior» · línea horizontal del 1 al 9 · «siguiente».
+  Nombres de los pasos en pantallas anchas; números en las estrechas (el paso actual con nombre
+  hasta 640 px). La parada actual es una gota de vidrio que se desliza por la línea.
+- **El dock no se anima en el cambio de paso** y queda por encima del contenido: tiene nombre
+  propio de View Transition (`dock`, `dock-line`) y durante la transición su lámina se vuelve
+  casi opaca, porque el navegador lo pinta como una foto sin desenfoque en vivo.
 
-- **A · Línea:** el recorrido como línea de transporte, con la línea vertical del 1 al 9 a la
-  izquierda. Se quedó la línea; los botones eran demasiado planos.
-- **B · Estándar:** el visualizador como documento técnico tipo FIPS (STIX Two, columna única).
-  Descartada.
-- **C · Vidrio:** liquid glass sobre un retículo de puntos. Se quedó el material; el brillo del
-  ratón era enorme, los puntos del fondo se confundían con el vidrio y era demasiado transparente.
+## Colors (color)
 
-## Segunda ronda (absorbida)
+Tokens en `visualizer/static/style.css` (`:root`, con su versión `prefers-color-scheme: dark`).
 
-- **Riel** (Línea + Vidrio): gustó; sigue en el selector.
-- **Capa** (vidrio solo en la navegación flotante, línea vertical flotando a la izquierda): gustó
-  la idea de elementos flotantes, pero sobraba hueco entre la línea y el contenido y la cabecera
-  fija tapaba el contenido. Rehecha en la ronda 3.
-- **Hilo** (la línea atraviesa el contenido): descartada; no se veía en qué paso estabas ni
-  cuántos quedaban.
+| Token | Claro | Oscuro | Uso |
+|---|---|---|---|
+| `--bg` | `#eef1f6` | `#0a0d14` | fondo bajo el vidrio |
+| `--text` | `#0c1222` | `#eef1f8` | texto |
+| `--muted` | `#4a5468` | `#aab3c5` | texto secundario |
+| `--accent` | `#5432d3` | `#a996ff` | la línea: tramo recorrido, lo elegido, «siguiente» |
+| `--on-accent` | `#ffffff` | `#150c38` | texto sobre el acento |
+| `--ok` / `--bad` | `#0f7a49` / `#bf2a1c` | `#55d394` / `#ff8070` | correcto / error y manipulación |
+| `--neg` / `--pos` | `#1f6feb` / `#e2590f` | `#5b9bff` / `#ff8a45` | coeficientes negativos / positivos |
+| `--plate` | `#0f1724` | `#e8edf4` | placas de las ecuaciones |
+| `--glow-alice-*` | azul y turquesa | | fondo cuando actúa Alice (mitad izquierda) |
+| `--glow-bob-*` | naranja y coral | | fondo cuando actúa Bob (mitad derecha) |
 
-## Tercera ronda: las dos direcciones en el selector
+Uniformes en paleta *plasma* (en `app.js`). Contraste medido: texto ≥ 13,8:1 sobre el vidrio,
+secundario ≥ 6,3:1, texto sobre el acento ≥ 7,4:1, verde «correcto» ≥ 4,5:1.
 
-Comparten el material de `prototypes/cristal.css`: vidrio, botones con relieve, selector de
-parámetros que se desliza y fondo de color que dice quién actúa.
+## Typography (tipografía)
 
-### Riel — la línea vertical en su columna
-- Cabecera de vidrio arriba; la línea del 1 al 9 con nombres y quién actúa (Alice/Bob) en una
-  columna de vidrio fija a la izquierda; Alice/canal/Bob, texto y figura como láminas a la
-  derecha. En tableta y móvil la línea se tumba y queda fija arriba.
-- Overpass (señalética). Ecuaciones en placas oscuras de andén.
+- **Overpass** (señalética) para todo; **Overpass Mono** para datos, hex y ecuaciones. Desde
+  Google Fonts.
+- El punto medio «·» sale de la letra del sistema (`@font-face` «Punto medio» con
+  `unicode-range: U+00B7`): el de Overpass no ocupa ancho y se comía el espacio siguiente.
+- Títulos 800, 1,75 rem (1,375 rem en móvil), tracking −0,02 em; cuerpo 1 rem / 1,6.
 
-### Capa — elementos flotantes, contenido a todo el ancho
-- Arriba, el título en la página y, flotando fija, **solo una píldora pequeña** con los
-  parámetros (lente de vidrio que se desliza con rebote), «Nueva ejecución» y «Manipular c».
-- Abajo, un **dock de vidrio con la línea horizontal** del 1 al 9 (nombres en pantallas anchas,
-  números en las estrechas) entre «anterior» y «siguiente».
-- El contenido es opaco y ocupa todo el ancho; lo único que pasa por debajo del vidrio al
-  desplazar es el propio contenido.
-- En móvil la píldora deja de flotar (se queda al principio) y el dock sigue abajo.
-- Letra del sistema (SF en Apple).
+## Components (componentes)
 
-### Común
-- **Botones con relieve** y **selector de parámetros que se desliza** (ver Reglas de Denis).
-- **Alice y Bob se distinguen por el lado y el color:** cuando actúa Alice se ilumina en azul la
-  mitad izquierda del fondo (donde está Alice en el esquema) y cuando actúa Bob, en cálido la
-  derecha; además el vidrio entero se tiñe un poco de ese color (`--phase-tint`, 700 ms).
-- **En oscuro, ninguna sombra de color** (el detector lo marca como halo de neón).
-- **Cifras sin caja** dentro de las figuras: número y etiqueta separados por una regla fina.
+- **Botones con relieve** (`button`): cara con degradado `--btn-face-1 → --btn-face-2`, filo
+  `--btn-hi` arriba, sombra `--btn-shadow`; al pulsar bajan 1 px con `--btn-pressed`.
+  Principal (`.primary`): cara del color del acento. «Manipular c» activo queda hundido.
+- **Selector segmentado** (`.segmented`): pista hundida (`--track`, `--track-shadow`) y una pieza
+  `.seg-thumb` con la cara del acento que se desliza (320 ms, ease-out) a la opción elegida.
+- **Láminas de vidrio**: ver «Liquid glass».
+- **Ecuaciones** (`.formula`): placa oscura `--plate` con Overpass Mono, como un cartel de andén.
+- **Cifras de las figuras** (`.stat`): sin caja; número y etiqueta separados por una regla fina.
+- **Alice · canal · Bob** (`.flow`): la parte que actúa lleva anillo del acento; `ek` y `c`
+  cruzan el canal como una ficha la primera vez que se llega a un paso donde viajan.
+
+## Cómo se llegó aquí (prototipos)
+
+- **Ronda 1:** Línea (recorrido como línea de transporte), Estándar (documento tipo FIPS),
+  Vidrio (liquid glass sobre puntos). De Línea quedó la línea de pasos; de Vidrio, el material.
+- **Ronda 2:** Riel (Línea + vidrio), Capa (vidrio solo en la navegación flotante), Hilo (la línea
+  atraviesa el contenido, descartada).
+- **Ronda 3:** Riel y Capa rehecha (línea horizontal abajo). **Definitivo:** cabecera y contenido
+  de Riel, ancho y dock de Capa.
+
+Los commits `9e2742f`, `87fd80a` y `35eba51` guardan cada ronda.
 
 ## Liquid glass (solo en esta app)
 
@@ -183,8 +197,8 @@ la gota que lleva dentro refracta la página de detrás y no solo el tinte de su
 ### Grosores (los únicos tres)
 | Grosor | Uso | Claro | Oscuro | Desenfoque |
 |---|---|---|---|---|
-| Fino | Riel: cabecera, línea, Alice/canal/Bob | blanco 64 % | `#1a1f2e` 68 % | 16 px |
-| Normal | Riel: figuras. Capa: píldora y dock | blanco 78 % | `#141825` 80 % | 24 px |
+| Fino | cabecera, Alice/canal/Bob | blanco 64 % | `#1a1f2e` 68 % | 16 px |
+| Normal | figura y dock (grueso en móvil) | blanco 78 % | `#141825` 80 % | 24 px |
 | Grueso | texto que se lee | blanco 88 % | `#10131e` 88 % | 30 px |
 
 Ronda 1 usaba 42 / 58 / 76 %: era demasiado transparente. Controles dentro del vidrio: relleno
@@ -203,7 +217,7 @@ translúcido **sin** desenfoque propio (vidrio sobre vidrio destroza la legibili
 - **Rendimiento:** el fondo no se dibuja en un lienzo: son degradados de CSS que solo se desplazan
   con `translate` al cambiar de paso. El retículo 3D del paso 2 va **encima** del vidrio, así que
   girarlo no obliga a recalcular ningún desenfoque. Lo caro es desplazar la página (cada lámina
-  vuelve a desenfocar lo de detrás): Riel tiene 5 láminas y Capa 2.
+  vuelve a desenfocar lo de detrás): hay 5 láminas (cabecera, Alice/Bob, texto, figura y dock).
 - **Pendiente de comprobar en hardware real:** fluidez al desplazar en un iPhone y en un portátil
   con gráfica integrada (la pestaña de pruebas de estas sesiones estaba en segundo plano y no daba
   tiempos de fotograma fiables).
@@ -236,4 +250,13 @@ Ronda 2 (2026-11-13), con sus palabras:
 - **Luz del puntero:** con 150/110 px, «que sea un poco más pequeña».
 - **Alice y Bob en el fondo:** «me gusta la idea, pero no se diferencian bien».
 
-Ronda 3: pendiente de que compare Riel y la nueva Capa.
+Ronda 3 (2026-11-14), con sus palabras — **diseño definitivo**:
+
+- «La seccion superior de Riel pero que el selector de 512, 768 etc aparezca a la derecha del
+  titulo y descripcion del ml-kem, es decir, en la misma fila en lugar de debajo.»
+- «El contenido de Riel, me gusta la opacidad que tiene y como se ve, pero como el guideline se
+  va a quedar abajo, horizontal y flotante, aplicale la anchura que tiene el diseño B Capa.»
+- «el guideline se queda abajo horizontal, como lo tiene Capa, pero arregla ese bug de que
+  aparece y desaparece» (el dock se escondía detrás del contenido al cambiar de paso).
+- «El fondo me gusta el que hay … con los colores diferenciados para bob y alice.»
+- Luz del puntero de 100 / 70 px: «me gusta».
