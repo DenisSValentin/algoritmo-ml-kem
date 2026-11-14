@@ -119,7 +119,7 @@ input[type="range"] { accent-color: var(--accent); width: 180px; max-width: 100%
 .seg-thumb { display: none; position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) {
   .segmented[data-ready] > .seg-thumb {
-    transition: transform var(--thumb-duration, 320ms) var(--thumb-ease, var(--ease-out)), width var(--thumb-duration, 320ms) var(--thumb-ease, var(--ease-out));
+    transition: transform var(--thumb-duration, 320ms) var(--thumb-ease, var(--ease-out));
   }
 }
 .segmented button[aria-checked="true"] small { color: inherit; opacity: 0.8; }
@@ -270,6 +270,13 @@ canvas.rotatable:active { cursor: grabbing; }
 .visual .visual-head h4 { margin: 0; }
 
 .controls-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; font-size: 0.875rem; }
+/* Retículo: ruido y botones en la misma línea; la barra del ruido encoge lo que haga falta
+   para que quepan, y solo si no hay sitio ni así (móvil) los botones bajan juntos */
+.controls-line { flex-wrap: wrap; }
+.controls-line .noise { display: flex; align-items: center; gap: 10px; flex: 1 1 180px; min-width: 0; white-space: nowrap; }
+.controls-line .noise input { flex: 1 1 auto; width: auto; min-width: 70px; }
+.controls-line .button-pair { display: flex; gap: 10px; flex: none; }
+.controls-line .button-pair button { white-space: nowrap; }
 
 table.compare { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 table.compare th, table.compare td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -516,7 +523,7 @@ button:disabled { box-shadow: none; opacity: 0.4; }
 
 /* lo principal y lo elegido: cara de color, con la misma luz y la misma sombra.
    En los parámetros, la cara es la pieza que se desliza (.seg-thumb) y el botón queda transparente */
-button.primary, .seg-thumb, .visual-head .segmented button[aria-checked="true"] {
+button.primary {
   color: var(--on-accent);
   border-color: color-mix(in srgb, var(--accent) 70%, black);
   background: linear-gradient(180deg, var(--accent-hi), var(--accent));
@@ -540,8 +547,23 @@ button[aria-pressed="true"] {
 }
 .segmented button { border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; box-shadow: none; }
 .segmented button + button { border-left: 1px solid transparent; }
-.seg-thumb { display: block; border-radius: var(--radius-sm); border: 1px solid; }
-#paramPicker button[aria-checked="true"] { color: var(--on-accent); background: transparent; transition: color 200ms ease-out; }
+/* La pieza elegida de los parámetros: cara de color sin filo blanco; la profundidad la da solo
+   una sombra suave debajo. Se desliza con transform (los tres botones miden lo mismo, así que
+   no cambia de ancho por el camino) */
+.seg-thumb {
+  display: block; border: 0; border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  box-shadow: 0 2px 4px -1px rgba(20, 10, 60, 0.3), 0 8px 18px -10px var(--accent-shadow);
+}
+.params { display: grid; grid-template-columns: repeat(3, 1fr); }
+.visual-head .segmented { display: inline-grid; grid-template-columns: repeat(2, 1fr); }
+.segmented > button { align-items: center; justify-content: center; text-align: center; }
+/* Los botones de un selector no tienen cara propia: ni hundirse, ni filo, ni sombra al pasar */
+.segmented > button, .segmented > button:hover, .segmented > button:active { background: transparent; border-color: transparent; box-shadow: none; transform: none; filter: none; }
+.segmented > button[aria-checked="true"] { color: var(--on-accent); background: transparent; transition: color 200ms ease-out; }
+@media (hover: hover) and (pointer: fine) {
+  .segmented > button:not([aria-checked="true"]):hover { background: var(--glass-fill); }
+}
 .segmented button[aria-checked="true"] small { color: inherit; opacity: 0.85; }
 @media (hover: hover) and (pointer: fine) {
   .segmented button:hover:not([aria-checked="true"]) { background: var(--glass-fill); box-shadow: none; border-color: transparent; }
@@ -631,6 +653,7 @@ body { font-weight: 400; letter-spacing: 0; }
 }
 .brand h1 { margin: 0; font: 800 1.75rem/1.1 var(--font-display); letter-spacing: -0.02em; }
 .byline { margin: 6px 0 0; max-width: 60ch; color: var(--muted); font-size: 0.875rem; line-height: 1.45; }
+.byline span { display: block; }   /* qué es, y en otra línea de quién es */
 .controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }   /* acciones centradas bajo los parámetros */
 .actions { display: flex; gap: 8px; }
 
@@ -663,7 +686,30 @@ body { font-weight: 400; letter-spacing: 0; }
 .token { top: auto; bottom: -6px; margin: 0; width: 16px; height: 16px; background: radial-gradient(circle at 35% 30%, #fff, var(--accent) 70%); box-shadow: 0 2px 6px var(--accent-shadow); }
 .wire.tampered .token { background: radial-gradient(circle at 35% 30%, #fff, var(--bad) 70%); }
 .tamper-tag { justify-content: center; }
-#banner .banner { border-radius: 16px; }
+/* Aviso de manipulación: anclado arriba y por encima de todo, como el dock abajo, para que
+   no se olvide que el texto cifrado está manipulado */
+.tamper-banner {
+  position: fixed; z-index: 27; left: 50%; translate: -50% 0; top: max(12px, env(safe-area-inset-top));
+  width: var(--dock-w); margin: 0; align-items: center;
+  padding: 10px 10px 10px 16px; border-radius: 18px;
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, var(--surface));
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 35%, transparent), 0 10px 28px -12px rgba(0, 0, 0, 0.45);
+  view-transition-name: tamper-banner;
+}
+.tamper-banner span { flex: 1; }
+.tamper-banner .banner-off { flex: none; min-height: 36px; padding: 6px 12px; color: var(--bad); }
+::view-transition-group(tamper-banner) { animation: none; }
+::view-transition-old(tamper-banner) { display: none; }
+::view-transition-new(tamper-banner) { animation: none; }
+[data-tamper] .app { padding-top: 92px; }
+[data-tamper] html, html[data-tamper] { scroll-padding-top: 92px; }
+@media (max-width: 640px) {
+  .tamper-banner { font-size: 0.8125rem; padding: 8px 8px 8px 12px; }
+  .tamper-banner .banner-off kbd { display: none; }
+  [data-tamper] .app { padding-top: 104px; }
+}
 
 /* --------------------------------------------------------------- texto y figura */
 
@@ -757,8 +803,7 @@ body { font-weight: 400; letter-spacing: 0; }
   .masthead { grid-template-columns: minmax(0, 1fr); }
   .controls { align-items: stretch; }
   /* los tres conjuntos a partes iguales en todo el ancho, no apiñados a la izquierda */
-  .params { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
-  .params button { align-items: center; }
+  .params { width: 100%; }
   .actions button { flex: 1; justify-content: center; }
 }
 

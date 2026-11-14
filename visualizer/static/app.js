@@ -477,9 +477,10 @@ function latticeDemo(dimension) {
   return h("div", {},
     canvas,
     h("div", { class: "controls-line" },
-      "Tamaño del ruido:", slider,
-      h("button", { onclick: newPuzzle }, "Nuevo punto"),
-      h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución")),
+      h("label", { class: "noise" }, "Tamaño del ruido:", slider),
+      h("span", { class: "button-pair" },
+        h("button", { onclick: newPuzzle }, "Nuevo punto"),
+        h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución"))),
     status,
   );
 }
@@ -708,11 +709,30 @@ function lattice3dDemo(dimension) {
   return h("div", {},
     canvas,
     h("div", { class: "controls-line" },
-      "Tamaño del ruido:", slider,
-      h("button", { onclick: newPuzzle }, "Nuevo punto"),
-      h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución")),
+      h("label", { class: "noise" }, "Tamaño del ruido:", slider),
+      h("span", { class: "button-pair" },
+        h("button", { onclick: newPuzzle }, "Nuevo punto"),
+        h("button", { onclick: () => { reveal = !reveal; draw(); } }, "Mostrar / ocultar solución"))),
     status,
   );
+}
+
+// El selector 2D/3D se vuelve a crear al cambiar de vista: su pieza arranca donde estaba la
+// opción anterior y se desliza hasta la nueva, igual que la de los parámetros
+let lastLatticeView = state.latticeView;
+function slideLatticeThumb() {
+  const group = document.querySelector(".visual-head .segmented");
+  if (!group) return;
+  const thumb = group.querySelector(":scope > .seg-thumb");
+  const from = group.querySelector(`[data-view="${lastLatticeView}"]`) || group.querySelector('[aria-checked="true"]');
+  lastLatticeView = state.latticeView;
+  if (!thumb || !from?.offsetWidth) return;
+  thumb.style.width = `${from.offsetWidth}px`;
+  thumb.style.height = `${from.offsetHeight}px`;
+  thumb.style.transform = `translate(${from.offsetLeft}px, ${from.offsetTop}px)`;
+  void getComputedStyle(thumb).transform;
+  group.setAttribute("data-ready", "");
+  placeThumb(group);
 }
 
 function latticeSection(dimension) {
@@ -724,7 +744,8 @@ function latticeSection(dimension) {
     document.querySelector('.visual-head [aria-checked="true"]')?.focus();
   };
   const picker = h("div", { class: "segmented", role: "radiogroup", "aria-label": "Dimensiones del retículo de juguete" },
-    views.map(([view, label]) => h("button", { role: "radio", "aria-checked": String(view === state.latticeView), onclick: () => select(view) }, label)));
+    h("span", { class: "seg-thumb", "aria-hidden": "true" }),
+    views.map(([view, label]) => h("button", { role: "radio", "data-view": view, "aria-checked": String(view === state.latticeView), onclick: () => select(view) }, label)));
   const is3d = state.latticeView === "3d";
   return h("section", {},
     h("div", { class: "visual-head" }, h("h4", {}, `Retículo de juguete en ${is3d ? 3 : 2} dimensiones`), picker),
@@ -1238,6 +1259,9 @@ function placeThumb(group, animate = true) {
   }
 }
 
+// Se resuelve cuando la pieza del selector termina de deslizarse (ver selectParams)
+let thumbSettled = Promise.resolve();
+
 function renderParamPicker() {
   const picker = $("paramPicker");
   if (!picker.querySelector(".seg-thumb")) {
@@ -1317,13 +1341,18 @@ function render() {
   const d = state.data;
   if (!d) return;
   $("banner").replaceChildren(state.tamper
-    ? h("div", { class: "banner", role: "status" }, icon("bolt", 16), h("span", {}, `Modo manipulación: se ha invertido un bit del byte ${d.decaps.tampered_byte} del texto cifrado mientras viajaba por el canal. Pulsa M para desactivarlo.`))
+    ? h("div", { class: "banner tamper-banner", role: "status" }, icon("bolt", 16),
+      h("span", {}, h("b", {}, "Modo manipulación: "), `se ha invertido un bit del byte ${d.decaps.tampered_byte} del texto cifrado mientras viajaba por el canal.`),
+      h("button", { class: "banner-off", onclick: toggleTamper }, "Desactivar ", h("kbd", {}, "M")))
     : "");
+  // Con la manipulación activa, el aviso flota fijo arriba y la página le deja sitio
+  document.documentElement.toggleAttribute("data-tamper", state.tamper);
   renderFlow(d);
   const { explain, visual } = STEPS[state.step].render(d);
   $("explain").innerHTML = explain;
   $("visual").replaceChildren(visual);
   $("visual").dataset.fig = String(state.step + 1);
+  slideLatticeThumb();
   document.dispatchEvent(new CustomEvent("mlkem:render"));
 }
 
@@ -1354,7 +1383,10 @@ async function load() {
   if (state.data) document.body.classList.add("loading");
   else showLoader();
   try {
-    state.data = await python("exchange", state.params, state.tamper, null);
+    // Si la pieza de los parámetros está viajando, los datos nuevos se pintan al acabar: repintar
+    // la página a la vez le quitaba fluidez
+    const [data] = await Promise.all([python("exchange", state.params, state.tamper, null), thumbSettled]);
+    state.data = data;
   } catch (error) {
     state.data = null;
     showError(error);
@@ -1397,6 +1429,7 @@ function selectParams(name) {
   if (name === state.params) return;
   state.params = name;
   renderParamPicker(); // la selección se desliza ya, sin esperar a que Python termine
+  thumbSettled = reduceMotion.matches ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, 340));
   load();
 }
 

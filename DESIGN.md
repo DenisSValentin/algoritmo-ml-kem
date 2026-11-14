@@ -110,9 +110,9 @@ cualquier preferencia del agente. Antes de cambiar la interfaz, léelas.
 
 ## Composición
 
-- **Cabecera** (lámina de vidrio fina): título y descripción a la izquierda; a la derecha, en la
-  misma fila, el selector de parámetros (512 / 768 / 1024) y debajo «Nueva ejecución» y
-  «Manipular c». Por debajo de 900 px se apila.
+- **Cabecera** (lámina de vidrio fina): título y descripción a la izquierda (qué es en una línea
+  y de quién es en otra); a la derecha, en la misma fila, el selector de parámetros (512 / 768 /
+  1024) y centrados debajo «Nueva ejecución» y «Manipular c». Por debajo de 900 px se apila.
 - **Contenido a todo el ancho** (máx. 1240 px): Alice · canal · Bob en una lámina fina; debajo,
   texto (lámina gruesa) y figura (lámina normal) en dos columnas, una sola por debajo de 1100 px.
 - **Dock flotante abajo**, de vidrio: «anterior» · línea horizontal del 1 al 9 · «siguiente».
@@ -155,8 +155,15 @@ secundario ≥ 6,3:1, texto sobre el acento ≥ 7,4:1, verde «correcto» ≥ 4,
 - **Botones con relieve** (`button`): cara con degradado `--btn-face-1 → --btn-face-2`, filo
   `--btn-hi` arriba, sombra `--btn-shadow`; al pulsar bajan 1 px con `--btn-pressed`.
   Principal (`.primary`): cara del color del acento. «Manipular c» activo queda hundido.
-- **Selector segmentado** (`.segmented`): pista hundida (`--track`, `--track-shadow`) y una pieza
-  `.seg-thumb` con la cara del acento que se desliza (320 ms, ease-out) a la opción elegida.
+- **Selectores segmentados** (parámetros y 2D/3D): pista hundida (`--track`, `--track-shadow`),
+  opciones de igual ancho y texto centrado, y una pieza `.seg-thumb` del color del acento, sin
+  filo blanco y con una sombra suave, que se desliza solo con `transform` (320 ms, ease-out). Los
+  botones de dentro no tienen cara propia (ni hundirse, ni filo al pasar el ratón). Al cambiar
+  de parámetros, los datos nuevos se pintan cuando la pieza ha llegado, para no entrecortarla.
+- **Aviso de manipulación** (`.tamper-banner`): fijo arriba, por encima de todo, como el dock
+  abajo, con botón «Desactivar» (en el móvil no hay tecla M).
+- **Controles del retículo:** ruido, «Nuevo punto» y «Mostrar / ocultar solución» en una línea;
+  la barra encoge lo necesario y solo en móvil los botones bajan juntos.
 - **Láminas de vidrio**: ver «Liquid glass».
 - **Ecuaciones** (`.formula`): placa oscura `--plate` con Overpass Mono, como un cartel de andén.
 - **Cifras de las figuras** (`.stat`): sin caja; número y etiqueta separados por una regla fina.
